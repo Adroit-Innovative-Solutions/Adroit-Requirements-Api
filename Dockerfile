@@ -1,36 +1,46 @@
+# -------- Build Stage --------
+FROM openjdk:21-jdk-slim AS builder
 
-FROM openjdk:17-jdk-slim AS builder
+RUN apt-get update && \
+    apt-get install -y maven curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven && apt-get install -y curl
-
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the Maven project file
 COPY pom.xml .
-
-# Download dependencies (this step is caching the dependencies layer)
 RUN mvn dependency:go-offline -B
 
-# Copy the rest of the application source code
 COPY src ./src
-
-# Build the application (the JAR file will be generated in the target folder)
 RUN mvn clean package -DskipTests
 
-# Use the official openjdk image for running the application
-FROM openjdk:17-jdk-slim
+# -------- Runtime Stage --------
+FROM openjdk:21-jdk-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the JAR file from the build stage into the container
-COPY --from=builder /app/target/DataquadRequirementsApi-0.0.1-SNAPSHOT.jar app.jar
+RUN apt-get update && apt-get install -y ca-certificates && mkdir -p /etc/ssl/certs/custom
 
-# Expose the port the app runs on
-EXPOSE 8111
+COPY nginx/ssl/mymulya.crt /etc/ssl/certs/custom/mymulya.crt
 
-# Run the JAR file
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Import certificate into Java truststore if exists
+RUN if [ -f /etc/ssl/certs/custom/mymulya.crt ]; then \
+      keytool -import -trustcacerts -alias mymulya_cert \
+        -file /etc/ssl/certs/custom/mymulya.crt \
+        -keystore $JAVA_HOME/lib/security/cacerts \
+        -storepass changeit -noprompt; \
+    else \
+      echo "Certificate file not found, skipping import"; \
+    fi
 
+ARG SPRING_PROFILES_ACTIVE=dev
+ARG PORT=8097
+
+ENV SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
+ENV PORT=$PORT
+
+COPY --from=builder /app/target/requirements-service-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE $PORT
+
+ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Dserver.port=$PORT -jar app.jar"]
