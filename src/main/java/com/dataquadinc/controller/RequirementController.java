@@ -98,8 +98,8 @@ public class RequirementController {
     ){
         log.info("Incoming Request For fetching Requirement for JobId {}",jobId);
          RequirementDTO response=requirementService.requirementById(jobId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(response,"Requirement Fetched Successfully for "+jobId,HttpStatus.CREATED));
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.success(response,"Requirement Fetched Successfully for "+jobId,HttpStatus.OK));
     }
     @GetMapping("/download-jd/{jobId}")
     public ResponseEntity<byte[]> downloadJD(
