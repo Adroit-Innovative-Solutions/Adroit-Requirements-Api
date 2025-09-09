@@ -13,6 +13,8 @@ public interface RequirementMapper {
 
     Requirement toEntity(RequirementDTO requirementDTO);
 
+    @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(source = "updatedAt", target = "updatedAt")
     RequirementDTO toDto(Requirement requirement);
 
     @Mapping(source = "visaType",target = "visaType")
