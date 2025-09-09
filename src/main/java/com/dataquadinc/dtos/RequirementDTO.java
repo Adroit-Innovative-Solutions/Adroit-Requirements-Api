@@ -2,6 +2,7 @@ package com.dataquadinc.dtos;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -29,6 +30,8 @@ public class RequirementDTO {
     private String visaType;
     private String assignedBy;
     private List<UserAssignment> assignedUsers;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
 }
