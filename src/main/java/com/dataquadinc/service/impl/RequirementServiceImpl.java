@@ -53,14 +53,16 @@ public class RequirementServiceImpl implements RequirementService {
             requirement=requirementMapper.toEntity(dto);
             requirement.setJobId(generateJobId());
             requirement.setCreatedBy(userId);
-            requirement.setAssignedBy(userId);
+            requirement.setAssignedById(userId);
+            requirement.setAssignedByName(getUserNameFromUserId(userId));
         }
         else {
            requirement=requirementRepository.findById(jobId)
                    .orElseThrow(()-> new ResourceNotFoundException("Requirement not found with id: " + jobId));
             // update only non-null fields from dto → requirement
             requirement.setUpdatedBy(userId);
-            requirement.setAssignedBy(userId);
+            requirement.setAssignedById(dto.getAssignedById());
+            requirement.setAssignedByName(getUserNameFromUserId(dto.getAssignedById()));
             requirementMapper.updateEntityFromDto(dto, requirement);
 
         }
@@ -69,15 +71,15 @@ public class RequirementServiceImpl implements RequirementService {
                 requirement.setJobDescriptionBlob(jobDescriptionFile.getBytes());
         }
        Requirement savedRequirement=requirementRepository.save(requirement);
-        addOrUpdateJobRecruiter(savedRequirement,dto.getUserIds(), savedRequirement.getAssignedBy(),userId);
+        addOrUpdateJobRecruiter(savedRequirement,dto.getUserIds(), savedRequirement.getAssignedById(),userId);
 
        return requirementMapper.toResponse(savedRequirement);
     }
 
     @Override
-    public Page<RequirementDTO> allRequirements(String keyword,Pageable pageable) {
+    public Page<RequirementDTO> allRequirements(String keyword,Map<String,Object> filters,Pageable pageable) {
        log.info("Fetching Requirements ...");
-       Page<Requirement> requirementPage=requirementRepository.allRequirements(keyword, pageable);
+       Page<Requirement> requirementPage=requirementRepository.allRequirements(keyword, filters,pageable);
        log.info("Fetched {} requirements with keyword {} ",requirementPage.getTotalElements(),keyword);
        Page<RequirementDTO> requirementPageDTO=requirementPage.map(requirementMapper::toDto);
 
@@ -145,6 +147,27 @@ public class RequirementServiceImpl implements RequirementService {
         return requirementMapper.toDeletedRequirementResponse(savedRequirement);
     }
 
+    @Override
+    public Page<RequirementDTO> requirementsAssignedByUser(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+
+        Page<RequirementDTO> requirementDTOPage=requirementRepository.requirementsAssignedByUser(userId,keyword,filters,pageable)
+                .map(requirementMapper::toDto);
+
+      return requirementDTOPage.map(requirementDTO -> {
+                 requirementDTO.setAssignedUsers(getUserAssignments(requirementDTO.getJobId()));
+                 return requirementDTO;
+      });
+    }
+
+    @Override
+    public Page<RequirementDTO> requirementsAssignedToUser(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+
+        Page<RequirementDTO> requirementDTOPage=requirementRepository.requirementsAssignedToUser(userId,keyword,filters,pageable)
+                .map(requirementMapper::toDto);
+        return requirementDTOPage;
+    }
+
+
     public List<UserAssignment> getUserAssignments(String jobId){
        Set<JobRecruiter> jobRecruiters= jobRecruiterRepository.findByRequirementJobId(jobId);
 
@@ -164,7 +187,8 @@ public class RequirementServiceImpl implements RequirementService {
     }
 
     @Transactional
-    public Set<JobRecruiter> addOrUpdateJobRecruiter(Requirement requirement,Set<String> userIds,String assignedBy,String userID){
+    public Set<JobRecruiter> addOrUpdateJobRecruiter(Requirement requirement,
+                                                     Set<String> userIds,String assignedById,String userID){
 
         //Fetch Existing Recruiters for Requirement
         Set<JobRecruiter> existingJobRecruiters=jobRecruiterRepository.findByRequirementJobId(requirement.getJobId());
@@ -181,8 +205,8 @@ public class RequirementServiceImpl implements RequirementService {
                 .map(userId->{
                     JobRecruiter jobRecruiter = new JobRecruiter();
                     jobRecruiter.setUserId(userId);
-                    jobRecruiter.setAssignedBy(assignedBy);
-                    jobRecruiter.setCreatedBy(assignedBy);
+                    jobRecruiter.setAssignedById(assignedById);
+                    jobRecruiter.setCreatedBy(assignedById);
                     jobRecruiter.setRequirement(requirement);
                     return jobRecruiter;
                 }).collect(Collectors.toSet());
@@ -206,6 +230,11 @@ public class RequirementServiceImpl implements RequirementService {
 
         return finalJobRecruiters;
 
+    }
+    public String getUserNameFromUserId(String userId){
+       List<UserAssignment> user=userFeignClient.getUserIdsAndUserNames(List.of(userId)).getBody();
+
+       return user.getFirst().getUserName();
     }
 
 

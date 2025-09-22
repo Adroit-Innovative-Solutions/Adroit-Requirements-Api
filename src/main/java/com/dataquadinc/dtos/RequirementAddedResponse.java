@@ -14,7 +14,7 @@ public class RequirementAddedResponse {
     private String jobId;
     private String jobTitle;
     private String clientName;
-    private String assignedBy;
+    private String assignedById;
     private LocalDateTime createdAt;
 
 }

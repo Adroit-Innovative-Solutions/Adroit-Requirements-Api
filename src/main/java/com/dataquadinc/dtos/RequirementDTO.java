@@ -28,7 +28,8 @@ public class RequirementDTO {
     private String jobDescription;
     private String status;
     private String visaType;
-    private String assignedBy;
+    private String assignedById;
+    private String assignedByName;
     private List<UserAssignment> assignedUsers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
