@@ -26,7 +26,8 @@ public class AddRequirementDTO {
     private String jobDescription;
     private String status;
     private String visaType;
-    private String assignedBy;
+    private String assignedById;
+    private String assignedByName;
     private Set<String> userIds;
 
 }

@@ -1,11 +1,9 @@
 package com.dataquadinc.controller;
 
 import com.dataquadinc.commons.ApiResponse;
+import com.dataquadinc.commons.PageResponse;
 import com.dataquadinc.commons.SystemConstants;
-import com.dataquadinc.dtos.AddRequirementDTO;
-import com.dataquadinc.dtos.DeletedRequirementResponse;
-import com.dataquadinc.dtos.RequirementAddedResponse;
-import com.dataquadinc.dtos.RequirementDTO;
+import com.dataquadinc.dtos.*;
 import com.dataquadinc.service.RequirementService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
+
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
         "http://182.18.177.16","http://192.168.0.139:3000"})
 @Slf4j
@@ -54,19 +54,12 @@ public class RequirementController {
                     "- If <b>jobId</b> is not provided → a new requirement is created.<br/>" +
                     "- If <b>jobId</b> is provided → the existing requirement is updated."
     )
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "201", description = "Requirement successfully created or updated",
-//                    content = @Content(mediaType = "application/json",
-//                            schema = @Schema(implementation = RequirementAddedResponse.class))),
-//            @ApiResponse(responseCode = "404", description = "Requirement not found for update"),
-//            @ApiResponse(responseCode = "400", description = "Invalid request payload")
-//    })
     @PostMapping("/post-requirement/{userId}")
     public ResponseEntity<ApiResponse<RequirementAddedResponse>> postRequirement(
             @PathVariable String userId,
             @ModelAttribute AddRequirementDTO requirementDTO,
             @RequestParam (required = false) String jobId,
-            @RequestParam (value = "jobDescriptionFile",required = false)MultipartFile jobDescriptionFile) throws IOException {
+            @RequestParam (value = "jobDescriptionFile",required = false) MultipartFile jobDescriptionFile) throws IOException {
 
        log.info("Incoming Request For adding Requirement {}",userId);
         RequirementAddedResponse response =requirementService.addRequirement(requirementDTO,userId,jobId,jobDescriptionFile);
@@ -78,20 +71,37 @@ public class RequirementController {
                     ApiResponse.success(response,"Requirement Updated Successfully",HttpStatus.OK));
     }
 
+    /**
+     *
+     * @param page
+     * @param size
+     * @param keyword
+     * @return
+     */
+    @Operation(summary = "Fetching All Requirements")
     @GetMapping("/allRequirements")
-    public ResponseEntity<ApiResponse<Page<RequirementDTO>>> allRequirements(
+    public ResponseEntity<ApiResponse<PageResponse<RequirementDTO>>> allRequirements(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Map<String,Object> filters
     ){
         log.info("Incoming Request For fetching All Requirement");
         Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
-        Page<RequirementDTO> response=requirementService.allRequirements(keyword,pageable);
+
+        Page<RequirementDTO> response=requirementService.allRequirements(keyword,filters,pageable);
+        PageResponse<RequirementDTO> apiResponse=new PageResponse<>(response);
 
         return ResponseEntity.status(HttpStatus.OK).body(
-                ApiResponse.success(response,"Requirement Fetched Successfully",HttpStatus.OK));
+                ApiResponse.success(apiResponse,"Requirement Fetched Successfully",HttpStatus.OK));
     }
 
+    /**
+     *
+     * @param jobId
+     * @return
+     */
+    @Operation(summary = "Fetch Requirement By JOB ID")
     @GetMapping("/requirement-id/{jobId}")
     public ResponseEntity<ApiResponse<RequirementDTO>> requirementById(
             @PathVariable String jobId
@@ -101,12 +111,27 @@ public class RequirementController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponse.success(response,"Requirement Fetched Successfully for "+jobId,HttpStatus.OK));
     }
+
+    /**
+     *
+     * @param jobId
+     * @return
+     */
+    @Operation(summary = "Download JD file")
     @GetMapping("/download-jd/{jobId}")
     public ResponseEntity<byte[]> downloadJD(
             @PathVariable String jobId){
 
      return requirementService.downloadJd(jobId);
     }
+
+    /**
+     *
+     * @param jobId
+     * @param userId
+     * @return
+     */
+    @Operation(summary = "Delete Requirement By JOB ID")
     @DeleteMapping("/delete-requirement/{jobId}")
     public ResponseEntity<ApiResponse<DeletedRequirementResponse>> deleteRequirement(
             @PathVariable String jobId,
@@ -114,5 +139,28 @@ public class RequirementController {
 
        DeletedRequirementResponse response=requirementService.deleteRequirement(jobId,userId);
        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response,"Requirement Deleted For Job ID "+jobId,HttpStatus.OK));
+    }
+
+    @GetMapping("/requirements-user/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<RequirementDTO>>> requirementsByUser(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") Boolean asAssignee,
+            @RequestParam (required = false) String keyword,
+            @RequestParam (required = false) Map<String,Object> filters
+    ){
+        Pageable pageable=PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Page<RequirementDTO> requirementDTOPage;
+        if(asAssignee)  {
+            // Jobs Assigned To User
+            requirementDTOPage=requirementService.requirementsAssignedToUser(userId,keyword,filters,pageable);
+        }else{
+            // Jobs Assigned By User
+            requirementDTOPage= requirementService.requirementsAssignedByUser(userId,keyword,filters,pageable);
+        }
+        PageResponse<RequirementDTO> pageResponse=new PageResponse(requirementDTOPage);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(pageResponse,"Requirements Fetched Successfully",HttpStatus.OK));
     }
 }

@@ -38,7 +38,8 @@ public class Requirement extends BaseEntity{
     private Set<JobRecruiter> jobRecruiters;
 
     private String status;
-    private String assignedBy;
+    private String assignedById;
+    private String assignedByName;
 
     @PrePersist
     protected void onCreate(){

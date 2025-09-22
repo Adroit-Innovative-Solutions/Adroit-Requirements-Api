@@ -16,7 +16,7 @@ public class JobRecruiter extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String userId;
-    private String assignedBy;
+    private String assignedById;
     @ManyToOne
     @JoinColumn(name = "job_id")
     private Requirement requirement;
