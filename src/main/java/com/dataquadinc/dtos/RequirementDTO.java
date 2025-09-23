@@ -15,6 +15,7 @@ public class RequirementDTO {
 
     private String jobId;
     private String jobTitle;
+    private String clientId;
     private String clientName;
     private String jobType;
     private String location;

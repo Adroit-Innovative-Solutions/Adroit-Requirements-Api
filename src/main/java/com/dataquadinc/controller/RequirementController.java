@@ -141,6 +141,17 @@ public class RequirementController {
        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response,"Requirement Deleted For Job ID "+jobId,HttpStatus.OK));
     }
 
+    /**
+     *
+     * @param userId
+     * @param page
+     * @param size
+     * @param asAssignee
+     * @param keyword
+     * @param filters
+     * @return
+     */
+    @Operation(summary = "Fetch Requirements By User ID")
     @GetMapping("/requirements-user/{userId}")
     public ResponseEntity<ApiResponse<PageResponse<RequirementDTO>>> requirementsByUser(
             @PathVariable String userId,
