@@ -16,6 +16,7 @@ public class Requirement extends BaseEntity{
     @Id
     private String jobId;
     private String jobTitle;
+    private String clientId;
     private String clientName;
     private String jobType;
     private String location;

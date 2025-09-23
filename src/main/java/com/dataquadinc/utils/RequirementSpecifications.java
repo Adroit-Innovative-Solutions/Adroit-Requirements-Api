@@ -3,7 +3,6 @@ package com.dataquadinc.utils;
 import com.dataquadinc.model.Requirement;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
-import org.springframework.boot.autoconfigure.rsocket.RSocketProperties;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,7 @@ public class RequirementSpecifications {
     private static final Set<String> ALLOWED_FIELDS = Set.of(
             "jobId", "jobTitle", "clientName", "jobType", "location",
             "jobMode", "experienceRequired", "noticePeriod", "relevantExperience",
-            "qualification", "salaryPackage", "noOfPositions", "visaType",
+            "qualification", "salaryPackage", "noOfPositions", "visaType","clientId",
             "jobDescription", "status", "assignedById", "createdAt", "assignedByName","updatedAt",
             "createdBy", "updatedBy"
     );
@@ -38,7 +37,7 @@ public class RequirementSpecifications {
                     "jobId", "jobTitle", "clientName", "jobType",
                     "location", "jobMode", "experienceRequired", "noticePeriod",
                     "relevantExperience", "qualification", "salaryPackage", "visaType",
-                    "status", "assignedById","assignedByName"
+                    "status", "assignedById","assignedByName","clientId"
             );
             // Building Fields Dynamically
             for (String field : stringFields) {
@@ -81,6 +80,7 @@ public class RequirementSpecifications {
                             case "status":
                             case "assignedById":
                             case "assignedByName":
+                            case "clientId":
                                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString()+"%"));
                                 break;
                             case "noOfPositions":
