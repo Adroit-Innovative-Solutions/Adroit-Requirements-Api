@@ -2,6 +2,7 @@ package com.dataquadinc.controller;
 
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
+import com.dataquadinc.model.Client;
 import com.dataquadinc.repository.ClientRepository;
 import com.dataquadinc.service.ClientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,17 +10,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000",
         "http://192.168.0.135:80/","http://192.168.0.135/","http://182.18.177.16:443","http://mymulya.com:443","http://localhost/",
@@ -105,6 +113,47 @@ public class ClientController {
             ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR), "Something went wrong: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Unexpected Error", null, error));
+        }
+    }
+
+    @GetMapping("/ClientsDocuments/downloadAll/{id}")
+    public ResponseEntity<Resource> downloadAllSupportingDocuments(@PathVariable String id) {
+        Optional<Client> clientOptional = repo.findById(id);
+
+        if (clientOptional.isPresent()) {
+            Client client = clientOptional.get();
+            List<String> fileNames = client.getSupportingDocuments();
+
+            if (fileNames == null || fileNames.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+
+            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                 ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+
+                for (String fileName : fileNames) {
+                    Path filePath = Paths.get("uploads", fileName);
+                    if (Files.exists(filePath)) {
+                        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+                        Files.copy(filePath, zipOutputStream);
+                        zipOutputStream.closeEntry();
+                    }
+                }
+                zipOutputStream.finish();
+
+                ByteArrayResource resource = new ByteArrayResource(byteArrayOutputStream.toByteArray());
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Client_" + id + "_Documents.zip\"")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentLength(resource.contentLength())
+                        .body(resource);
+
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
