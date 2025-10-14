@@ -72,6 +72,13 @@ public class ClientController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Clients fetched successfully", clients, null));
     }
 
+    @GetMapping("/client/getAllClientsNames")
+    public ResponseEntity<ApiResponse<List<ClientsDetailsDto>>> getAllClientsNames() {
+        service.evaluateClientStatuses();
+        List<ClientsDetailsDto> clients = service.getAllClientsNames();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Clients fetched successfully", clients, null));
+    }
+
     @GetMapping("/client/{id}")
     public ResponseEntity<ApiResponse<Client_Dto>> getClientById(@PathVariable String id) {
         Optional<Client_Dto> optionalClient = service.getClientById(id);

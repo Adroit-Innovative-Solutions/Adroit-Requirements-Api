@@ -73,6 +73,14 @@ public class ClientService {
         return dto;
     }
 
+    private ClientsDetailsDto convertToClientsDTO(Client clients) {
+        logger.debug("Converting Client entity to DTO for clientId: {}", clients.getId());
+        ClientsDetailsDto dto = new ClientsDetailsDto();
+        dto.setId(clients.getId());
+        dto.setClientName(clients.getClientName());
+        return dto;
+    }
+
     private Client convertToEntity(Client_Dto dto) {
         logger.debug("Converting Client DTO to entity for clientName: {}", dto.getClientName());
         Client client = new Client();
@@ -155,6 +163,20 @@ public class ClientService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public List<ClientsDetailsDto> getAllClientsNames() {
+        logger.info("Fetching all clients for the current month...");
+        List<Client> clients = repository.getClients();
+        logger.info("Fetched {} clients for current month", clients.size());
+
+        return clients.stream()
+                .map(client -> {
+                    ClientsDetailsDto dto = convertToClientsDTO(client);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public void evaluateClientStatuses() {
