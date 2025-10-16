@@ -3,8 +3,6 @@ package com.dataquadinc.controller;
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
 import com.dataquadinc.model.Client;
-import com.dataquadinc.model.ClientDocument;
-import com.dataquadinc.repository.ClientDocumentRepository;
 import com.dataquadinc.repository.ClientRepository;
 import com.dataquadinc.service.ClientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,24 +12,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -48,8 +42,6 @@ public class ClientController {
     private ClientService service;
     @Autowired
     private ClientRepository repo;
-    @Autowired
-    private ClientDocumentRepository clientDocumentRepository;
 
     private final Path UPLOAD_DIR = Paths.get("uploads");
 
@@ -63,8 +55,6 @@ public class ClientController {
             @RequestPart(value = "supportingDocuments", required = false) List<MultipartFile> files) {
 
         try {
-            logger.info("Received DTO JSON: {}", dtoJson);
-
             Client_Dto dto = objectMapper.readValue(dtoJson, Client_Dto.class);
             Client_Dto createdClient = service.createClient(dto, files);
             return ResponseEntity.ok(new ApiResponse<>(true, "Client added successfully", createdClient, null));
@@ -133,49 +123,46 @@ public class ClientController {
         }
     }
 
-    @GetMapping("/client/download/{documentId}")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable Long documentId) {
-        logger.info("Downloading document with ID: {}", documentId);
+    @GetMapping("/ClientsDocuments/downloadAll/{id}")
+    public ResponseEntity<Resource> downloadAllSupportingDocuments(@PathVariable String id) {
+        Optional<Client> clientOptional = repo.findById(id);
 
-        Optional<ClientDocument> docOpt = clientDocumentRepository.findById(documentId);
-        if (docOpt.isEmpty()) {
-            logger.warn("Document with ID {} not found", documentId);
+        if (clientOptional.isPresent()) {
+            Client client = clientOptional.get();
+            List<String> fileNames = client.getSupportingDocuments();
+
+            if (fileNames == null || fileNames.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+
+            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                 ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+
+                for (String fileName : fileNames) {
+                    Path filePath = Paths.get("uploads", fileName);
+                    if (Files.exists(filePath)) {
+                        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+                        Files.copy(filePath, zipOutputStream);
+                        zipOutputStream.closeEntry();
+                    }
+                }
+                zipOutputStream.finish();
+
+                ByteArrayResource resource = new ByteArrayResource(byteArrayOutputStream.toByteArray());
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Client_" + id + "_Documents.zip\"")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentLength(resource.contentLength())
+                        .body(resource);
+
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-        ClientDocument doc = docOpt.get();
-
-        try {
-            Path filePath = Paths.get(doc.getFilePath()).normalize();
-
-            if (!Files.exists(filePath)) {
-                logger.error("File '{}' not found on disk", doc.getFilePath());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-
-            // Save a copy to server downloads folder (optional)
-            Path downloadDir = Paths.get("downloads");
-            if (!Files.exists(downloadDir)) {
-                Files.createDirectories(downloadDir);
-            }
-            Path serverCopyPath = downloadDir.resolve(doc.getFileName());
-            Files.copy(filePath, serverCopyPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            logger.info("Document '{}' saved to server folder '{}'", doc.getFileName(), serverCopyPath.toAbsolutePath());
-
-            // Send file to client for download
-            Resource resource = new UrlResource(filePath.toUri());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(doc.getContentType()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getFileName() + "\"")
-                    .body(resource);
-
-        } catch (IOException e) {
-            logger.error("Error downloading file '{}' : {}", doc.getFileName(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
-
-
 
     @DeleteMapping("/client/delete/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteClient(@PathVariable String id) {

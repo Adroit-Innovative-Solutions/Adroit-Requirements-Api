@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Client_Dto {
-    private String clientId;
+    private String id;
     private String clientName;
     private String clientAddress;
     private String positionType;
@@ -23,9 +23,9 @@ public class Client_Dto {
     @Pattern(regexp = "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/.*)?$",
             message = "Invalid LinkedIn URL format")
     private String clientLinkedInUrl;
-    private List<ClientDocumentDto> supportingDocuments =new ArrayList<>(); // Stores file names only
-    private String onBoardedById;
-    private String onBoardedByName;
+    private List<String> supportingDocuments =new ArrayList<>(); ; // Stores file names only
+    private String onBoardedBy;
+    private String assignedTo;
     private String status;
     private String feedBack;
     private int numberOfRequirements;
@@ -51,6 +51,13 @@ public class Client_Dto {
     @JsonIgnore // Prevents file data from being included in API responses
     private byte[] documentData;
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getClientName() {
         return clientName;
@@ -109,30 +116,21 @@ public class Client_Dto {
         this.clientLinkedInUrl = clientLinkedInUrl;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getOnBoardedBy() {
+        return onBoardedBy;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setOnBoardedBy(String onBoardedBy) {
+        this.onBoardedBy = onBoardedBy;
     }
 
-    public String getOnBoardedById() {
-        return onBoardedById;
+    public String getAssignedTo() {
+        return assignedTo;
     }
 
-    public void setOnBoardedById(String onBoardedById) {
-        this.onBoardedById = onBoardedById;
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
     }
-
-    public String getOnBoardedByName() {
-        return onBoardedByName;
-    }
-
-    public void setOnBoardedByName(String onBoardedByName) {
-        this.onBoardedByName = onBoardedByName;
-    }
-
 
     public byte[] getDocumentData() {
         return documentData;
