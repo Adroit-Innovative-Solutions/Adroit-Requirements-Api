@@ -91,7 +91,7 @@ public class ClientService {
     private ClientsDetailsDto convertToClientsDTO(Client clients) {
         logger.debug("Converting Client entity to DTO for clientId: {}", clients.getClientId());
         ClientsDetailsDto dto = new ClientsDetailsDto();
-        dto.setClientId(clients.getClientId());
+        dto.setId(clients.getClientId());
         dto.setClientName(clients.getClientName());
         return dto;
     }
