@@ -1,0 +1,340 @@
+Bootstrap
+---------
+-Bootstrap is a free front-end framework for faster and easier web development.
+
+-Bootstrap includes HTML and CSS based design templates for typography, forms, buttons, tables, navigation, modals, image carousels and many other, as well as optional JavaScript plugins
+
+-Bootstrap also gives us the ability to easily create responsive designs.
+
+-Developed by twitter
+-mobile first approach
+-browser compatibility 
+
+What's new in V5? 
+-Brand new logo
+-New typography
+-No jQuery Required anymore
+-Enhanced grid - multiple changes including additional of XXL - 
+-new themes colors added
+- bootstrap 5 has its own icon system 
+
+
+ 
+how to use bootstrap
+--------------------
+1. Local Installation (bootstrap.css/bootstrap.min.css)
+2. CDN(Content Delivery Network) (bootstrap.css/bootstrap.min.css)
+
+
+bootstrap - 5 CDN
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+bootstrap - 3 CDN
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+N.p:
+----
+Many users already have downloaded Bootstrap from MaxCDN when visiting another site. As a result, it will be loaded from cache when they visit your site, which leads to faster loading time. Also, most CDN's will make sure that once a user requests a file from it, it will be served from the server closest to them, which also leads to faster loading time
+
+Bootstrap Container Layout
+--------------------------
+-Containers are the most basic layout element in bootstrap
+-Containers are used to pad the content inside of them
+-there are two container classes 
+-the  .container class provides a responsive fixed width container
+- the .container-fluid class provides a full width container, spanning the entire width
+of the viewport
+
+Bootstrap Grid
+---------------
+-Design layout, templates of the websites
+-Bootstrap grid system allows up to 12 columns across the page/ in a row
+-Rows (grid- it consists of row and columns)
+-In one row we can have upto max 12 columns 
+-Divide the row into columns to achieve your layout design
+-Columns supports various screen resolutions like 
+xs-  Extra small
+sm- mobile/ipad
+md-ipad/desktop
+lg-large 
+xl-extra large
+xxl- extra extra large
+
+bootstrap grid classes
+----------------------
+the bootstrap 5 grid system has five classes
+-.col-xs(screen width less than 576px)
+-.col-sm(screen width equal or greater than 576px)
+-.col-md(screen width equal or greater than 768px)
+-.col-lg(screen width equal or greater than 992px)
+-.col-xl(screen width equal or greater than 1200px)
+-.col-xxl(screen width equal or greater than 1400px)
+
+
+Button
+-------
+btn-success
+btn-danger
+btn-warning
+btn-info
+btn-default
+btn-link
+
+btn-lg
+btn-md
+btn-sm
+btn-xs
+
+Typography
+----------
+Using .h1 to .h6 classes on other elements to make them behave as headings
+
+
+colors
+------
+text color -.text-muted, .text-primary, .text-success, .text-info, .text-warning, .text-danger, .text-secondary, .text-white, .text-dark, .text-body
+class="text-danger"
+body color: .bg-primary, .bg-success, .bg-info, .bg-warning, .bg-danger, .bg-secondary, .bg-dark and .bg-light.
+class="bg-dark text-white"
+Image
+------
+img-circle
+img-rounded
+img-thumbnail
+img-responsive
+
+B5
+---
+.rounded
+.rounded-circle
+.img-thumbnail
+
+Aligning Images
+----------------
+float-start
+float-end
+mx-auto d-block -(margin auto -display block)-center an image
+img-fluid- for responsive images
+
+Table
+------
+table
+table-bordered
+table-striped
+table-hover
+table-dark
+table-responsive
+
+jumbotron and well is from bootstrap 3 / 
+
+Jumbotron
+--------
+A jumbotron indicates a big box for calling extra attention to some special content or information.
+
+A jumbotron is displayed as a grey box with rounded corners. It also enlarges the font sizes of the text inside it.
+
+wells
+-----
+the .well class adds a rounded border around an element with a gray background color and some padding.
+
+Alerts
+-----
+To close the alert message, add a .alert-dismissible class to the alert container. 
+Then add class="close" and data-dismiss="alert" to a link or a button element 
+(when you click on this the alert box will disappear).
+&times; we will use for X button.
+
+Badges
+-------
+Badges are used to add additional information to any content: like notifications
+
+spinners
+---------
+To create a spinner/loader, use the .spinner-border class.
+spinner-grow text-success  - grow style
+
+Panel
+------
+panel
+panel-default, panel-success
+panel-heading
+panel-body
+panel-footer
+
+
+Modal
+------
+The "Trigger" part:
+
+To trigger the modal window, you need to use a button or a link.
+
+Then include the two data-* attributes:
+
+data-toggle="modal" opens the modal window
+data-target="#myModal" points to the id of the modal
+The "Modal" part:
+
+The parent <div> of the modal must have an ID that is the same as the value of the data-target attribute used to trigger the modal ("myModal").
+
+The .modal class identifies the content of <div> as a modal and brings focus to it.
+
+The .fade class adds a transition effect which fades the modal in and out. Remove this class if you do not want this effect.
+
+The attribute role="dialog" improves accessibility for people using screen readers.
+
+The .modal-dialog class sets the proper width and margin of the modal.
+
+The "Modal content" part:
+
+The <div> with class="modal-content" styles the modal (border, background-color, etc.). Inside this <div>, add the modal's header, body, and footer.
+
+The .modal-header class is used to define the style for the header of the modal. The <button> inside the header has a data-dismiss="modal" attribute which closes the modal if you click on it. The .close class styles the close button, and the .modal-title class styles the header with a proper line-height.
+
+The .modal-body class is used to define the style for the body of the modal. Add any HTML markup here; paragraphs, images, videos, etc.
+
+The .modal-footer class is used to define the style for the footer of the modal. Note that this area is right aligned by default.
+
+
+
+Navbar
+------
+.nav
+.nav-item  <li></li>
+.nav-link	<a>
+.nav-pills
+.nav-tabs
+.active
+.disabled
+
+
+
+progress Bars
+--------------
+To create a default progress bar, add a .progress class to a container element and add the .
+progress-bar class to its child element.
+Use the CSS width property to set the width of the progress bar
+
+pagination
+-----------
+To create a basic pagination, add the .pagination class to an <ul> element. 
+Then add the .page-item to each <li> element 
+and a .page-link class to each link inside <li>
+
+Cards
+------
+.card
+.card-header
+.card-body
+.card-title
+.card-text
+.card-footer
+
+The .card-header class adds a heading to the card
+The .card-body class adds the content inside the card
+The .card-footer class adds a footer to the card
+The .card-title class to add card titles to any heading element
+
+
+Glyphicons
+----------
+Glyphicons can be used in text, buttons, toolbars, navigation, forms.
+<span class="glyphicon glyphicon-name"></span>
+
+B5
+---
+icons
+-----
+https://icons.getbootstrap.com/
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css">
+
+
+Carousel
+---------
+.carousel =	Creates a carousel
+.carousel-indicators = Adds indicators for the carousel. 
+These are the little dots at the bottom of each slide 
+(how many slides ,and which slide the user are currently viewing)
+
+.carousel-inner	= Adds slides to the carousel(inside carousel)
+.carousel-item = Specifies the content of each slide(images/content)
+.carousel-control-prev=	Adds a left (previous) button to the carousel, which allows the user to go back between the slides
+.carousel-control-next=	Adds a right (next) button to the carousel, which allows the user to go forward between the slides
+.carousel-control-prev-icon= used to create a "previous" button
+.carousel-control-next-icon=  used to create a "next" button
+.slide = Adds a CSS transition and animation effect when sliding from one item to the next.
+
+Flex - Quickly manage the layout, alignment, responsiveness and sizing of grid columns. 
+----
+Flex Container:
+=> .d-*-flex	Creates a flexbox container for different screens	
+=>.d-*-inline-flex	Creates an inline flexbox container for different screens
+
+Direction :	 	 
+.flex-*-row	Display flex items horizontally on different screens	
+.flex-*-row-reverse	Display flex items horizontally, and right-aligned, on different
+.flex-*-column	Display flex items vertically on different screens	
+.flex-*-column-reverse	Display flex items vertically, with reversed order, on different screens screens	
+
+Justified Content:	 	 
+.justify-content-*-start	Display flex items from the start (left-aligned) on different screens	
+.justify-content-*-end	Display flex items at the end (right-aligned) on different screens	
+.justify-content-*-center	Display flex items in the center of a flex container on different screens	
+.justify-content-*-between	Display flex items in "between" on different screens	
+.justify-content-*-around	Display flex items "around" on different screens	
+
+Fill / Equal Width	: 	 
+.flex--fill	Force flex items into equal widths on different screens	
+
+Grow:
+.flex--grow-0	Don't make the items grow on different screens	 
+.flex--grow-1	Make items grow on different screens	 
+
+Order  :	 	 
+.order-*-0-12	Change the order from 0 to 5 on small screens	
+
+Wrap: 	 	 
+.flex-*-nowrap	Don't wrap items on different screens	
+.flex-*-wrap	Wrap items on different screens	
+.flex-*-wrap-reverse	Reverse the wrapping of items on different screens	
+
+Align Content:	 	 
+.align-content-*-start	Align gathered items from the start on different screens	
+.align-content-*-end	Align gathered items at the end on different screens	
+.align-content-*-center	Align gathered items in the center on different screens	
+.align-content-*-around	Align gathered items "around" on different screens	
+.align-content-*-stretch Stretch gathered items on different screens
+	
+Align Items:	 	 
+.align-items-*-start	Align single rows of items from the start on different screens	
+.align-items-*-end		Align single rows of items at the end on different screens	
+.align-items-*-center	Align single rows of items in the center on different screens	
+.align-items-*-baseline	Align single rows of items on the baseline on different screens	
+.align-items-*-stretch	Stretch single rows of items on different screens
+
+Align Self: 	 
+.align-self-*-start	Align a flex item from the start on different screens	
+.align-self-*-end	Align a flex item at the end on different screens	
+.align-self-*-center	Align a flex item in the center on different screens	
+.align-self-*-baseline	Align a flex item on the baseline on different screens	
+.align-self-*-stretch	Stretch a flex item on different screens
+
+
+Form
+-----
+.form-label = class to each label element to ensure correct padding.
+
+check box wrapped around a container element with .form-check,and labels have a class of 
+.form-check-label, while checkboxes and radio buttons use .form-check-input
+
+
+
+
+
+
+
+
