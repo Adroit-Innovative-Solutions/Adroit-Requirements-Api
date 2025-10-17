@@ -3,6 +3,7 @@ package com.dataquadinc.service;
 import com.dataquadinc.dtos.*;
 import com.dataquadinc.exceptions.ClientAlreadyExistsException;
 import com.dataquadinc.model.Client;
+import com.dataquadinc.model.ClientDocument;
 import com.dataquadinc.repository.ClientRepository;
 import com.dataquadinc.repository.RequirementRepository;
 import jakarta.transaction.Transactional;
@@ -40,9 +41,9 @@ public class ClientService {
         int maxNumber = clients.stream()
                 .map(client -> {
                     try {
-                        return Integer.parseInt(client.getId().replace("CLIENT", ""));
+                        return Integer.parseInt(client.getClientId().replace("CLIENT", ""));
                     } catch (NumberFormatException e) {
-                        logger.warn("Invalid client ID format: {}", client.getId());
+                        logger.warn("Invalid client ID format: {}", client.getClientId());
                         return 0;
                     }
                 })
@@ -55,28 +56,42 @@ public class ClientService {
     }
 
     private Client_Dto convertToDTO(Client client) {
-        logger.debug("Converting Client entity to DTO for clientId: {}", client.getId());
+        logger.debug("Converting Client entity to DTO for clientId: {}", client.getClientId());
         Client_Dto dto = new Client_Dto();
-        dto.setId(client.getId());
+        dto.setClientId(client.getClientId());
         dto.setClientName(client.getClientName());
         dto.setClientAddress(client.getClientAddress());
         dto.setNetPayment(client.getNetPayment());
         dto.setSupportingCustomers(client.getSupportingCustomers());
         dto.setClientWebsiteUrl(client.getClientWebsiteUrl());
         dto.setClientLinkedInUrl(client.getClientLinkedInUrl());
-        dto.setDocumentData(client.getDocumentedData());
-        dto.setSupportingDocuments(client.getSupportingDocuments());
-        dto.setOnBoardedBy(client.getOnBoardedBy());
+        dto.setOnBoardedById(client.getOnBoardedById());
+        dto.setOnBoardedByName(client.getOnBoardedByName());
         dto.setPositionType(client.getPositionType());
         dto.setStatus(client.getStatus());
         dto.setFeedBack(client.getFeedBack());
+        List<ClientDocumentDto> documentDtos = client.getDocuments().stream()
+                .map(doc -> {
+                    ClientDocumentDto d = new ClientDocumentDto();
+                    d.setId(doc.getId());
+                    d.setFileName(doc.getFileName());
+                    d.setFilePath(doc.getFilePath());
+                    d.setContentType(doc.getContentType());
+                    d.setSize(doc.getSize());
+                    d.setUploadedAt(doc.getUploadedAt());
+                    return d;
+                })
+                .collect(Collectors.toList());
+
+        // ✅ Add only file names (or modify to send full documentDtos if desired)
+        dto.setSupportingDocuments(documentDtos);
         return dto;
     }
 
     private ClientsDetailsDto convertToClientsDTO(Client clients) {
-        logger.debug("Converting Client entity to DTO for clientId: {}", clients.getId());
+        logger.debug("Converting Client entity to DTO for clientId: {}", clients.getClientId());
         ClientsDetailsDto dto = new ClientsDetailsDto();
-        dto.setId(clients.getId());
+        dto.setId(clients.getClientId());
         dto.setClientName(clients.getClientName());
         return dto;
     }
@@ -84,18 +99,41 @@ public class ClientService {
     private Client convertToEntity(Client_Dto dto) {
         logger.debug("Converting Client DTO to entity for clientName: {}", dto.getClientName());
         Client client = new Client();
-        client.setId(dto.getId());
+        client.setClientId(dto.getClientId());
         client.setClientName(dto.getClientName());
         client.setClientAddress(dto.getClientAddress());
         client.setNetPayment(dto.getNetPayment());
         client.setSupportingCustomers(dto.getSupportingCustomers());
         client.setClientWebsiteUrl(dto.getClientWebsiteUrl());
         client.setClientLinkedInUrl(dto.getClientLinkedInUrl());
-        client.setDocumentedData(dto.getDocumentData());
-        client.setSupportingDocuments(dto.getSupportingDocuments());
-        client.setOnBoardedBy(dto.getOnBoardedBy());
+        client.setOnBoardedById(dto.getOnBoardedById());
+        client.setOnBoardedByName(dto.getOnBoardedByName());
         client.setPositionType(dto.getPositionType());
         client.setFeedBack(dto.getFeedBack());
+        // Map supporting documents from DTO to entity
+        if (dto.getSupportingDocuments() != null && !dto.getSupportingDocuments().isEmpty()) {
+            List<ClientDocument> documents = dto.getSupportingDocuments().stream().map(docDto -> {
+                ClientDocument doc = new ClientDocument();
+                doc.setId(docDto.getId());
+                doc.setFileName(docDto.getFileName());
+                doc.setFilePath(docDto.getFilePath());
+                doc.setContentType(docDto.getContentType());
+                doc.setSize(docDto.getSize());
+                doc.setUploadedAt(docDto.getUploadedAt());
+                doc.setClient(client); // associate with parent client
+                return doc;
+            }).collect(Collectors.toList());
+
+            client.setDocuments(documents);
+
+            // Optional: maintain just file names separately if needed
+            client.setSupportingDocumentNames(
+                    documents.stream().map(ClientDocument::getFileName).collect(Collectors.toList())
+            );
+        } else {
+            client.setDocuments(new ArrayList<>());
+            client.setSupportingDocumentNames(new ArrayList<>());
+        }
         return client;
     }
 
@@ -108,61 +146,78 @@ public class ClientService {
         }
 
         Client entity = convertToEntity(dto);
-        entity.setId(generateCustomId());
+        entity.setClientId(generateCustomId());
 
-        String createdBy = dto.getOnBoardedBy();
-        String assignedTo = dto.getAssignedTo();
+        String createdById = dto.getOnBoardedById();
+        String createdByName = dto.getOnBoardedByName();
 
-        if (assignedTo != null && !assignedTo.isBlank()) {
-            logger.info("Setting assignedTo for client: {}", assignedTo);
-            entity.setOnBoardedBy(assignedTo);
+
+        if (createdById != null && !createdById.isBlank()) {
+            logger.info("Setting createdBy (ID: {}, Name: {})", createdById,createdByName);
+            entity.setOnBoardedById(createdById);
+            entity.setOnBoardedByName(createdByName);
         } else {
-            logger.info("Setting createdBy for client: {}", createdBy);
-            entity.setOnBoardedBy(createdBy);
+            logger.warn("No onboarding info provided for client: {}", dto.getClientName());
         }
+
 
         Path uploadDir = Paths.get("uploads");
         if (!Files.exists(uploadDir)) {
-            logger.info("Creating upload directory: {}", uploadDir.toString());
             Files.createDirectories(uploadDir);
         }
 
-        List<String> fileNames = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
             logger.info("Uploading {} supporting documents for client: {}", files.size(), dto.getClientName());
+            List<ClientDocument> documentEntities = new ArrayList<>();
+
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
                     String fileName = file.getOriginalFilename();
-                    fileNames.add(fileName);
-
                     Path filePath = uploadDir.resolve(fileName);
                     Files.write(filePath, file.getBytes());
+
+                    ClientDocument doc = new ClientDocument();
+                    doc.setFileName(fileName);
+                    doc.setFilePath(filePath.toString());
+                    doc.setContentType(file.getContentType());
+                    doc.setSize(file.getSize());
+                    doc.setUploadedAt(LocalDateTime.now());
+                    doc.setData(file.getBytes());
+                    doc.setClient(entity);
+
+                    documentEntities.add(doc);
                     logger.info("Saved file {} for client {}", fileName, dto.getClientName());
                 }
             }
-        }
-        entity.setSupportingDocuments(fileNames);
 
-        entity = repo.save(entity);
-        logger.info("Client created successfully with ID: {}", entity.getId());
-        return convertToDTO(entity);
+            entity.setDocuments(documentEntities);
+            entity.setSupportingDocumentNames(
+                    documentEntities.stream().map(ClientDocument::getFileName).collect(Collectors.toList())
+            );
+        }
+        // ✅ End of block
+
+        // Now save the client entity
+        Client saved = repository.save(entity);
+        logger.info("Client created successfully with ID: {}", saved.getClientId());
+
+        return convertToDTO(saved);
     }
 
     public List<Client_Dto> getAllClients() {
-        logger.info("Fetching all clients for the current month...");
-        List<Client> clients = repository.getClients();
-        logger.info("Fetched {} clients for current month", clients.size());
+        logger.info("Fetching all clients with their documents...");
+        List<Client> clients = repository.findAllWithDocuments();
 
         return clients.stream()
                 .map(client -> {
                     Client_Dto dto = convertToDTO(client);
                     int requirementCount = repository.countRequirementsByClientName(client.getClientName());
                     dto.setNumberOfRequirements(requirementCount);
-                    logger.debug("Client {} has {} requirements", client.getId(), requirementCount);
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
+
 
     public List<ClientsDetailsDto> getAllClientsNames() {
         logger.info("Fetching all clients for the current month...");
@@ -191,7 +246,7 @@ public class ClientService {
 
             String status = hasRecentJob ? "ACTIVE" : "INACTIVE";
             client.setStatus(status);
-            logger.debug("Client {} (name: {}) status evaluated to: {}", client.getId(), client.getClientName(), status);
+            logger.debug("Client {} (name: {}) status evaluated to: {}", client.getClientId(), client.getClientName(), status);
         }
 
         repository.saveAll(allClients);
@@ -212,81 +267,95 @@ public class ClientService {
 
     public Optional<Client_Dto> updateClient(String id, Client_Dto dto, List<MultipartFile> files) {
         logger.info("Updating client with ID: {}", id);
+
         return repository.findById(id).map(existingClient -> {
 
-            String createdBy = dto.getOnBoardedBy();
-            String assignedTo = dto.getAssignedTo();
-            if (assignedTo != null && !assignedTo.isBlank()) {
-                logger.info("Assigned client to: {}", assignedTo);
-                existingClient.setOnBoardedBy(assignedTo);
-            } else if (createdBy != null && !createdBy.isBlank()) {
-                logger.info("Updated client by: {}", createdBy);
-                existingClient.setOnBoardedBy(createdBy);
+            // 🔹 Update onboarded info (only if provided)
+            if (dto.getOnBoardedById() != null && !dto.getOnBoardedById().isBlank()) {
+                existingClient.setOnBoardedById(dto.getOnBoardedById());
+                existingClient.setOnBoardedByName(dto.getOnBoardedByName());
+                logger.debug("Updated onboarded info for client: ID={}, Name={}", dto.getOnBoardedById(), dto.getOnBoardedByName());
             }
 
-            if (dto.getClientName() != null) {
-                logger.debug("Updating clientName to: {}", dto.getClientName());
+            // 🔹 Update core fields only if new values are provided
+            if (dto.getClientName() != null)
                 existingClient.setClientName(dto.getClientName());
-            }
-            if (dto.getClientAddress() != null) {
-                logger.debug("Updating clientAddress to: {}", dto.getClientAddress());
+
+            if (dto.getClientAddress() != null)
                 existingClient.setClientAddress(dto.getClientAddress());
-            }
-            if (dto.getNetPayment() != 0) {
-                logger.debug("Updating netPayment to: {}", dto.getNetPayment());
+
+            if (dto.getNetPayment() > 0)
                 existingClient.setNetPayment(dto.getNetPayment());
-            }
-            if (dto.getClientWebsiteUrl() != null) {
-                logger.debug("Updating clientWebsiteUrl to: {}", dto.getClientWebsiteUrl());
+
+            if (dto.getClientWebsiteUrl() != null)
                 existingClient.setClientWebsiteUrl(dto.getClientWebsiteUrl());
-            }
-            if (dto.getClientLinkedInUrl() != null) {
-                logger.debug("Updating clientLinkedInUrl to: {}", dto.getClientLinkedInUrl());
+
+            if (dto.getClientLinkedInUrl() != null)
                 existingClient.setClientLinkedInUrl(dto.getClientLinkedInUrl());
-            }
-            if (dto.getPositionType() != null) {
-                logger.debug("Updating positionType to: {}", dto.getPositionType());
+
+            if (dto.getPositionType() != null)
                 existingClient.setPositionType(dto.getPositionType());
-            }
-            if (dto.getSupportingCustomers() != null) {
-                logger.debug("Updating supportingCustomers for clientId: {}", id);
+
+            if (dto.getSupportingCustomers() != null)
                 existingClient.setSupportingCustomers(dto.getSupportingCustomers());
-            }
-            if (dto.getFeedBack() != null) {
-                logger.debug("Updating feedBack to: {}", dto.getFeedBack());
+
+            if (dto.getFeedBack() != null)
                 existingClient.setFeedBack(dto.getFeedBack());
-            }
+
+            // 🔹 Handle file uploads
             try {
                 if (files != null && !files.isEmpty()) {
-                    logger.info("Uploading {} additional documents for client update: {}", files.size(), id);
+                    logger.info("Uploading {} new document(s) for client update: {}", files.size(), id);
+
                     Path uploadDir = Paths.get("uploads");
                     if (!Files.exists(uploadDir)) {
-                        logger.info("Creating upload directory: {}", uploadDir.toString());
                         Files.createDirectories(uploadDir);
+                        logger.debug("Created upload directory: {}", uploadDir.toAbsolutePath());
                     }
 
-                    List<String> fileNames = new ArrayList<>(existingClient.getSupportingDocuments());
+                    // Use the proper list from entity (rename accordingly)
+                    List<String> updatedDocNames = new ArrayList<>(
+                            existingClient.getSupportingDocumentNames() != null
+                                    ? existingClient.getSupportingDocumentNames()
+                                    : new ArrayList<>()
+                    );
 
                     for (MultipartFile file : files) {
                         if (!file.isEmpty()) {
                             String fileName = file.getOriginalFilename();
-                            fileNames.add(fileName);
-
                             Path filePath = uploadDir.resolve(fileName);
+
                             Files.write(filePath, file.getBytes());
-                            logger.info("Saved file {} for client {}", fileName, id);
+                            updatedDocNames.add(fileName);
+
+                            logger.debug("Uploaded file '{}' for client '{}'", fileName, id);
+
+                            // Optionally, create ClientDocument entity for detailed info
+                            ClientDocument document = new ClientDocument();
+                            document.setFileName(fileName);
+                            document.setFilePath(filePath.toString());
+                            document.setContentType(file.getContentType());
+                            document.setSize(file.getSize());
+                            document.setUploadedAt(LocalDateTime.now());
+                            document.setClient(existingClient);
+
+                            existingClient.getDocuments().add(document);
                         }
                     }
-                    existingClient.setSupportingDocuments(fileNames);
+
+                    // Save file name list
+                    existingClient.setSupportingDocumentNames(updatedDocNames);
                 }
             } catch (IOException e) {
-                logger.error("Error while uploading files for client update: {}", e.getMessage());
-                e.printStackTrace();
+                logger.error("Error uploading files for client update: {}", e.getMessage(), e);
             }
 
-            Client saved = repository.save(existingClient);
-            logger.info("Client updated successfully: {}", saved.getId());
-            return convertToDTO(saved);
+            // 🔹 Save updated entity
+            Client updatedClient = repository.save(existingClient);
+            logger.info("Client updated successfully: {}", updatedClient.getClientId());
+
+            // 🔹 Convert back to DTO for response
+            return convertToDTO(updatedClient);
         });
     }
 
