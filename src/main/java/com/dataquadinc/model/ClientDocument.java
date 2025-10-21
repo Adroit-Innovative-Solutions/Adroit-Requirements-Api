@@ -16,7 +16,6 @@ public class ClientDocument {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String fileName;
-    private String filePath;     // e.g., uploads/{clientId}/{fileName}
     private String contentType;  // MIME type
     private long size;
     private LocalDateTime uploadedAt;

@@ -24,13 +24,19 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 500MB
+      max-request-size: 500MB
 
 
 user:
   microservice:
     url: http://localhost:8083
+
+# Logging configuration to suppress harmless async warnings
+logging:
+  level:
+    org.springframework.web.context.request.async: ERROR
+    org.apache.coyote.http11.Http11Processor: ERROR
 
 # Connecting prod
 #  profiles:
