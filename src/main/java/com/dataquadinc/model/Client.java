@@ -9,6 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,70 +20,68 @@ import java.util.UUID;
 public class Client {
 
     @Id
-    private String id;  // Custom-generated ID
+    private String clientId;  // Custom-generated ID
+
     @Column(unique = true, nullable = false)
     private String clientName;
-    private String onBoardedBy;
+
+    private String onBoardedById;
+    private String onBoardedByName;
     private String clientAddress;
     private String positionType;
     private int netPayment;
 
-
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<SupportingCustomerInfo> supportingCustomers;
+    private List<SupportingCustomerInfo> supportingCustomers = new ArrayList<>();
 
     private String clientWebsiteUrl;
+
     @Column(length = 1000)
     private String clientLinkedInUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<String> supportingDocuments;
+    private List<String> supportingDocumentNames = new ArrayList<>();
 
-    @Column
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClientDocument> documents = new ArrayList<>();
+
     private String status;
-
-    @Transient
-    private int numberOfRequirements; // 👈 won't be persisted
-
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
-    private byte[] documentedData;  // Stores actual file content
+    private byte[] documentedData;  // Optional: actual file content
 
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null || this.id.isEmpty()) {
-            this.id = "BDM" + UUID.randomUUID().toString().substring(0, 8);  // Generate Unique ID
-        }
-    }
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     private String feedBack;
 
-    public int getNumberOfRequirements() {
-        return numberOfRequirements;
+    @Transient
+    private int numberOfRequirements; // Computed, not persisted
+
+    // Auto-generate clientId if not provided
+    @PrePersist
+    public void prePersist() {
+        if (this.clientId == null || this.clientId.isEmpty()) {
+            this.clientId = "BDM" + UUID.randomUUID().toString().substring(0, 8);
+        }
     }
 
-    public void setNumberOfRequirements(int numberOfRequirements) {
-        this.numberOfRequirements = numberOfRequirements;
+    // Computed transient getter for document file names
+    @Transient
+    public List<String> getDocumentFileNames() {
+        return documents.stream()
+                .map(ClientDocument::getFileName)
+                .toList();
     }
 
-    public String getFeedBack() {
-        return feedBack;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setFeedBack(String feedBack) {
-        this.feedBack = feedBack;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getClientName() {
@@ -93,12 +92,20 @@ public class Client {
         this.clientName = clientName;
     }
 
-    public String getOnBoardedBy() {
-        return onBoardedBy;
+    public String getOnBoardedById() {
+        return onBoardedById;
     }
 
-    public void setOnBoardedBy(String onBoardedBy) {
-        this.onBoardedBy = onBoardedBy;
+    public void setOnBoardedById(String onBoardedById) {
+        this.onBoardedById = onBoardedById;
+    }
+
+    public String getOnBoardedByName() {
+        return onBoardedByName;
+    }
+
+    public void setOnBoardedByName(String onBoardedByName) {
+        this.onBoardedByName = onBoardedByName;
     }
 
     public String getClientAddress() {
@@ -149,12 +156,28 @@ public class Client {
         this.clientLinkedInUrl = clientLinkedInUrl;
     }
 
-    public List<String> getSupportingDocuments() {
-        return supportingDocuments;
+    public List<String> getSupportingDocumentNames() {
+        return supportingDocumentNames;
     }
 
-    public void setSupportingDocuments(List<String> supportingDocuments) {
-        this.supportingDocuments = supportingDocuments;
+    public void setSupportingDocumentNames(List<String> supportingDocumentNames) {
+        this.supportingDocumentNames = supportingDocumentNames;
+    }
+
+    public List<ClientDocument> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<ClientDocument> documents) {
+        this.documents = documents;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public byte[] getDocumentedData() {
@@ -173,11 +196,19 @@ public class Client {
         this.createdAt = createdAt;
     }
 
-    public String getStatus() {
-        return status;
+    public String getFeedBack() {
+        return feedBack;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setFeedBack(String feedBack) {
+        this.feedBack = feedBack;
+    }
+
+    public int getNumberOfRequirements() {
+        return numberOfRequirements;
+    }
+
+    public void setNumberOfRequirements(int numberOfRequirements) {
+        this.numberOfRequirements = numberOfRequirements;
     }
 }
