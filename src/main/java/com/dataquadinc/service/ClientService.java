@@ -4,6 +4,7 @@ import com.dataquadinc.dtos.*;
 import com.dataquadinc.exceptions.ClientAlreadyExistsException;
 import com.dataquadinc.model.Client;
 import com.dataquadinc.model.ClientDocument;
+import com.dataquadinc.repository.ClientDocumentRepository;
 import com.dataquadinc.repository.ClientRepository;
 import com.dataquadinc.repository.RequirementRepository;
 import jakarta.transaction.Transactional;
@@ -19,12 +20,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
+    @Autowired
+    private ClientDocumentRepository documentRepository;
 
     @Autowired
     private ClientRepository repository;
@@ -75,7 +79,6 @@ public class ClientService {
                     ClientDocumentDto d = new ClientDocumentDto();
                     d.setId(doc.getId());
                     d.setFileName(doc.getFileName());
-                    d.setFilePath(doc.getFilePath());
                     d.setContentType(doc.getContentType());
                     d.setSize(doc.getSize());
                     d.setUploadedAt(doc.getUploadedAt());
@@ -116,7 +119,6 @@ public class ClientService {
                 ClientDocument doc = new ClientDocument();
                 doc.setId(docDto.getId());
                 doc.setFileName(docDto.getFileName());
-                doc.setFilePath(docDto.getFilePath());
                 doc.setContentType(docDto.getContentType());
                 doc.setSize(docDto.getSize());
                 doc.setUploadedAt(docDto.getUploadedAt());
@@ -178,7 +180,6 @@ public class ClientService {
 
                     ClientDocument doc = new ClientDocument();
                     doc.setFileName(fileName);
-                    doc.setFilePath(filePath.toString());
                     doc.setContentType(file.getContentType());
                     doc.setSize(file.getSize());
                     doc.setUploadedAt(LocalDateTime.now());
@@ -265,7 +266,7 @@ public class ClientService {
         return clientOpt.map(this::convertToDTO);
     }
 
-    public Optional<Client_Dto> updateClient(String id, Client_Dto dto, List<MultipartFile> files) {
+    public Optional<Client_Dto> updateClient(String id, Client_Dto dto) {
         logger.info("Updating client with ID: {}", id);
 
         return repository.findById(id).map(existingClient -> {
@@ -278,78 +279,38 @@ public class ClientService {
             }
 
             // 🔹 Update core fields only if new values are provided
-            if (dto.getClientName() != null)
+            if (dto.getClientName() != null) {
                 existingClient.setClientName(dto.getClientName());
-
-            if (dto.getClientAddress() != null)
-                existingClient.setClientAddress(dto.getClientAddress());
-
-            if (dto.getNetPayment() > 0)
-                existingClient.setNetPayment(dto.getNetPayment());
-
-            if (dto.getClientWebsiteUrl() != null)
-                existingClient.setClientWebsiteUrl(dto.getClientWebsiteUrl());
-
-            if (dto.getClientLinkedInUrl() != null)
-                existingClient.setClientLinkedInUrl(dto.getClientLinkedInUrl());
-
-            if (dto.getPositionType() != null)
-                existingClient.setPositionType(dto.getPositionType());
-
-            if (dto.getSupportingCustomers() != null)
-                existingClient.setSupportingCustomers(dto.getSupportingCustomers());
-
-            if (dto.getFeedBack() != null)
-                existingClient.setFeedBack(dto.getFeedBack());
-
-            // 🔹 Handle file uploads
-            try {
-                if (files != null && !files.isEmpty()) {
-                    logger.info("Uploading {} new document(s) for client update: {}", files.size(), id);
-
-                    Path uploadDir = Paths.get("uploads");
-                    if (!Files.exists(uploadDir)) {
-                        Files.createDirectories(uploadDir);
-                        logger.debug("Created upload directory: {}", uploadDir.toAbsolutePath());
-                    }
-
-                    // Use the proper list from entity (rename accordingly)
-                    List<String> updatedDocNames = new ArrayList<>(
-                            existingClient.getSupportingDocumentNames() != null
-                                    ? existingClient.getSupportingDocumentNames()
-                                    : new ArrayList<>()
-                    );
-
-                    for (MultipartFile file : files) {
-                        if (!file.isEmpty()) {
-                            String fileName = file.getOriginalFilename();
-                            Path filePath = uploadDir.resolve(fileName);
-
-                            Files.write(filePath, file.getBytes());
-                            updatedDocNames.add(fileName);
-
-                            logger.debug("Uploaded file '{}' for client '{}'", fileName, id);
-
-                            // Optionally, create ClientDocument entity for detailed info
-                            ClientDocument document = new ClientDocument();
-                            document.setFileName(fileName);
-                            document.setFilePath(filePath.toString());
-                            document.setContentType(file.getContentType());
-                            document.setSize(file.getSize());
-                            document.setUploadedAt(LocalDateTime.now());
-                            document.setClient(existingClient);
-
-                            existingClient.getDocuments().add(document);
-                        }
-                    }
-
-                    // Save file name list
-                    existingClient.setSupportingDocumentNames(updatedDocNames);
-                }
-            } catch (IOException e) {
-                logger.error("Error uploading files for client update: {}", e.getMessage(), e);
+                logger.debug("Updated clientName: {}", dto.getClientName());
             }
-
+            if (dto.getClientAddress() != null) {
+                existingClient.setClientAddress(dto.getClientAddress());
+                logger.debug("Updated clientAddress: {}", dto.getClientAddress());
+            }
+            if (dto.getNetPayment() > 0) {
+                existingClient.setNetPayment(dto.getNetPayment());
+                logger.debug("Updated netPayment: {}", dto.getNetPayment());
+            }
+            if (dto.getClientWebsiteUrl() != null) {
+                existingClient.setClientWebsiteUrl(dto.getClientWebsiteUrl());
+                logger.debug("Updated clientWebsiteUrl: {}", dto.getClientWebsiteUrl());
+            }
+            if (dto.getClientLinkedInUrl() != null) {
+                existingClient.setClientLinkedInUrl(dto.getClientLinkedInUrl());
+                logger.debug("Updated clientLinkedInUrl: {}", dto.getClientLinkedInUrl());
+            }
+            if (dto.getPositionType() != null) {
+                existingClient.setPositionType(dto.getPositionType());
+                logger.debug("Updated positionType: {}", dto.getPositionType());
+            }
+            if (dto.getSupportingCustomers() != null) {
+                existingClient.setSupportingCustomers(dto.getSupportingCustomers());
+                logger.debug("Updated supportingCustomers with {} customers", dto.getSupportingCustomers().size());
+            }
+            if (dto.getFeedBack() != null) {
+                existingClient.setFeedBack(dto.getFeedBack());
+                logger.debug("Updated feedback");
+            }
             // 🔹 Save updated entity
             Client updatedClient = repository.save(existingClient);
             logger.info("Client updated successfully: {}", updatedClient.getClientId());
@@ -365,4 +326,44 @@ public class ClientService {
         repository.deleteById(id);
         logger.info("Client deleted: {}", id);
     }
+
+    // Handle multiple document updates or additions for a client
+    public List<ClientDocument> updateDocuments(String clientId, List<MultipartFile> files) throws IOException {
+        Client client = repo.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + clientId));
+
+        List<ClientDocument> existingDocs = documentRepository.findByClient_ClientId(clientId);
+        Map<String, ClientDocument> existingByName = existingDocs.stream()
+                .collect(Collectors.toMap(ClientDocument::getFileName, doc -> doc));
+
+        List<ClientDocument> results = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+
+            String originalName = file.getOriginalFilename();
+            ClientDocument document = existingByName.getOrDefault(originalName, new ClientDocument());
+
+            document.setFileName(originalName);
+            document.setContentType(file.getContentType());
+            document.setSize(file.getSize());
+            document.setUploadedAt(LocalDateTime.now());
+            document.setData(file.getBytes());
+            document.setClient(client);
+
+            results.add(documentRepository.save(document));
+        }
+
+        return results;
+    }
+
+    public void deleteDocumentsByIdsAndClient(List<Long> ids, String clientId) {
+        List<ClientDocument> docs = documentRepository.findAllById(ids);
+        // Ensure all docs belong to the `clientId` before deletion
+        docs.stream()
+                .filter(doc -> doc.getClient().getClientId().equals(clientId))
+                .forEach(documentRepository::delete);
+    }
+
+
 }

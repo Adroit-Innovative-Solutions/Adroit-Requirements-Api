@@ -101,15 +101,14 @@ public class ClientController {
         }
     }
 
-    @PutMapping(value = "/client/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PutMapping(value = "/client/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Client_Dto>> updateClient(
             @PathVariable String id,
-            @RequestPart("dto") String dtoJson,
-            @RequestPart(value = "supportingDocuments", required = false) List<MultipartFile> files) {
+            @RequestPart("dto") String dtoJson) {
 
         try {
             Client_Dto dto = objectMapper.readValue(dtoJson, Client_Dto.class);
-            Optional<Client_Dto> updatedClient = service.updateClient(id, dto, files);
+            Optional<Client_Dto> updatedClient = service.updateClient(id, dto);
 
             if (updatedClient.isPresent()) {
                 return ResponseEntity.ok(new ApiResponse<>(true, "Client updated successfully", updatedClient.get(), null));
@@ -119,19 +118,55 @@ public class ClientController {
                         .body(new ApiResponse<>(false, "Update failed", null, error));
             }
         } catch (JsonProcessingException e) {
-            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.BAD_REQUEST), "Error in JSON structure: " + e.getMessage());
+            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.BAD_REQUEST), "Invalid JSON: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(false, "Invalid JSON Format", null, error));
-        } catch (IOException e) {
-            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.BAD_REQUEST), "Could not parse client data." + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "JSON Parsing Error", null, error));
         } catch (Exception e) {
             ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR), "Something went wrong: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Unexpected Error", null, error));
         }
     }
+
+    @PutMapping(value = "/clients/updateDocuments/{clientId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<List<ClientDocument>>> updateOrAddDocuments(
+            @PathVariable String clientId,
+            @RequestPart("files") List<MultipartFile> files,
+            @RequestParam(value = "deleteDocIds", required = false) List<Long> deleteDocIds) {
+
+        try {
+            if (deleteDocIds != null && !deleteDocIds.isEmpty()) {
+                service.deleteDocumentsByIdsAndClient(deleteDocIds, clientId);
+            }
+
+            List<ClientDocument> updatedDocs = service.updateDocuments(clientId, files);
+
+            return ResponseEntity.ok(new ApiResponse<>(true,
+                    "Documents updated, added and deleted as requested", updatedDocs, null));
+
+        } catch (IOException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Connection reset")) {
+                // Client disconnected during upload — safe to ignore
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.BAD_REQUEST),
+                    "File handling error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, "Invalid file data", null, error));
+
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("Connection reset")) {
+                // Same safeguard for async/stream close
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR),
+                    "Unexpected error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Error updating documents", null, error));
+        }
+    }
+
+
 
     @GetMapping("/client/download/{documentId}")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long documentId) {
@@ -146,31 +181,18 @@ public class ClientController {
         ClientDocument doc = docOpt.get();
 
         try {
-            Path filePath = Paths.get(doc.getFilePath()).normalize();
+            // Serve directly from DB
+            ByteArrayResource resource = new ByteArrayResource(doc.getData());
 
-            if (!Files.exists(filePath)) {
-                logger.error("File '{}' not found on disk", doc.getFilePath());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-
-            // Save a copy to server downloads folder (optional)
-            Path downloadDir = Paths.get("downloads");
-            if (!Files.exists(downloadDir)) {
-                Files.createDirectories(downloadDir);
-            }
-            Path serverCopyPath = downloadDir.resolve(doc.getFileName());
-            Files.copy(filePath, serverCopyPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            logger.info("Document '{}' saved to server folder '{}'", doc.getFileName(), serverCopyPath.toAbsolutePath());
-
-            // Send file to client for download
-            Resource resource = new UrlResource(filePath.toUri());
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(doc.getContentType()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getFileName() + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + doc.getFileName() + "\"")
+                    .contentLength(doc.getSize())
                     .body(resource);
 
-        } catch (IOException e) {
-            logger.error("Error downloading file '{}' : {}", doc.getFileName(), e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error downloading document '{}': {}", doc.getFileName(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
