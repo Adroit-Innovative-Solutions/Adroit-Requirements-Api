@@ -1,15 +1,15 @@
 package com.dataquadinc.dtos;
 
 public class ClientsDetailsDto {
-    private String id;
+    private String clientId;
     private String clientName;
 
-    public String getId() {
-        return id;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getClientName() {
