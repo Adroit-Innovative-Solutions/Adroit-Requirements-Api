@@ -23,24 +23,21 @@ public class Requirement extends BaseEntity{
     private String jobMode;
     private String experienceRequired;
     private String noticePeriod;
-    private String relevantExperience;
     private String qualification;
-    private String salaryPackage;
+    private String billRate;
     private int noOfPositions;
     private String visaType;
-
     @Column(columnDefinition = "LONGTEXT")
     private String jobDescription;
     @Lob
     @Column(name = "job_description_blob", columnDefinition = "MEDIUMBLOB")
     private byte[] jobDescriptionBlob;
-
     @OneToMany(mappedBy = "requirement", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JobRecruiter> jobRecruiters;
-
     private String status;
     private String assignedById;
     private String assignedByName;
+    private String remarks;
 
     @PrePersist
     protected void onCreate(){
