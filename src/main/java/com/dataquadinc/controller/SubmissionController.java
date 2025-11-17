@@ -32,5 +32,10 @@ public class SubmissionController {
      return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
     }
 
+    @GetMapping("/get-submission/{jobId}")
+    public ResponseEntity<ApiResponse<SubmissionDTO>> getSubmission(@PathVariable String jobId){
+        ApiResponse apiResponse=new ApiResponse<>(true, "Submission Fetched Successfully", submissionService.getSubmission(jobId), null);
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
 
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -42,6 +43,11 @@ public class SubmissionServiceImpl implements SubmissionService {
 
 
         return submissionsMapper.toSubmissionAddedResponse(savedSubmission);
+    }
+
+    @Override
+    public List<SubmissionAddedResponse> getSubmission(String jobId) {
+        return List.of();
     }
 
     public String generateSubmissionId(){
