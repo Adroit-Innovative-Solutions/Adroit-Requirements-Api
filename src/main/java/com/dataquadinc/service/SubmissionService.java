@@ -1,7 +1,6 @@
 package com.dataquadinc.service;
 
 
-import com.dataquadinc.dtos.SubmissionAddedResponse;
 import com.dataquadinc.dtos.SubmissionDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +10,7 @@ import java.util.List;
 public interface SubmissionService {
 
 
-    SubmissionAddedResponse createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException;
+    SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException;
 
     List<SubmissionDTO> getSubmission(String userId, String jobId);
 

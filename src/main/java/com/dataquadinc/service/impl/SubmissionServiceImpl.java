@@ -3,20 +3,22 @@ package com.dataquadinc.service.impl;
 import com.dataquadinc.dtos.*;
 import com.dataquadinc.exceptions.ResourceNotFoundException;
 import com.dataquadinc.mapper.SubmissionsMapper;
+import com.dataquadinc.model.CommonDocument;
 import com.dataquadinc.model.Submissions;
+import com.dataquadinc.repository.CommonDocumentRepository;
 import com.dataquadinc.repository.SubmissionsRepository;
 import com.dataquadinc.service.SubmissionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,24 +35,36 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    CommonDocumentRepository commonDocumentRepository;
+
+
     private final String teamUrl="https://mymulya.com/users/associated-users/";
     private final String userUrl="https://mymulya.com/users/user/";
 
     @Override
-    public SubmissionAddedResponse createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException {
+    public SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException {
 
         findIsDuplicateSubmission(submissionDTO);
         Submissions submission=submissionsMapper.toEntity(submissionDTO);
 
         submission.setCreatedBy(userId);
         submission.setSubmissionId(generateSubmissionId());
-        if(!resume.isEmpty()){
-            submission.setResume(resume.getBytes());
-        }
         Submissions savedSubmission=submissionsRepository.save(submission);
 
+        if(savedSubmission!=null){
+            CommonDocument commonDocument=new CommonDocument();
+            commonDocument.setFId(savedSubmission.getSubmissionId());
+            commonDocument.setFileName(resume.getOriginalFilename());
+            commonDocument.setSize(resume.getSize());
+            commonDocument.setData(resume.getBytes());
+            commonDocument.setContentType(resume.getContentType());
+            commonDocument.setUploadedAt(LocalDateTime.now());
+            commonDocumentRepository.save(commonDocument);
+        }
 
-        return submissionsMapper.toSubmissionAddedResponse(savedSubmission);
+        SubmissionDTO dto = submissionsMapper.toDTO(savedSubmission);
+        return dto;
     }
 
     @Override
@@ -120,7 +134,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
     public void findIsDuplicateSubmission(SubmissionDTO submissionDTO){
 
-        Submissions submissions=submissionsRepository.findByCandidateEmailAndJobId(submissionDTO.getCandidateEmail(),submissionDTO.getJobId());
+        Submissions submissions=submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
        if(submissions!=null){
            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID "+ submissions.getJobId()+"Submitted By "+submissions.getRecruiterId());
        }

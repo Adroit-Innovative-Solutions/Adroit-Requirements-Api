@@ -17,6 +17,7 @@ public class SubmissionDTO {
     private String recruiterName;
     private String jobId;
     private String visaType;
+    private String billRate;
     private String currentCTC;
     private String expectedCTC;
     private String noticePeriod;
@@ -28,7 +29,6 @@ public class SubmissionDTO {
     private Double requiredTechnologiesRating;
     private String overallFeedback;
     private boolean relocation;
-    private String billRate;
     private String employmentType;
 
 }

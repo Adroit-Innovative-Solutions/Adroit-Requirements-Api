@@ -29,13 +29,10 @@ public class Submissions extends BaseEntity{
     private double relevantExperience;
     private String qualification;
     private String employmentType;
-
+    private String currentCTC;
+    private String expectedCTC;
     @Column(name = "overallFeedback", columnDefinition = "TEXT")
     private String overallFeedback;
-    @Lob
-    @Column(name = "resume",columnDefinition = "MEDIUMBLOB")
-    private byte[] resume;
-
     private String recruiterId;
     private String recruiterName;
     private String jobId;
