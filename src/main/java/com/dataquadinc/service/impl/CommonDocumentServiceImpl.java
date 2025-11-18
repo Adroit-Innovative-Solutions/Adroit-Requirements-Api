@@ -14,7 +14,7 @@ public class CommonDocumentServiceImpl implements CommonDocumentService  {
 
     @Override
     public CommonDocument findByFId(String submissionId) {
-        CommonDocument commonDocument = commonDocumentRepository.findByFId(submissionId);
+        CommonDocument commonDocument = commonDocumentRepository.findByCommonDocId(submissionId);
         return commonDocument;
     }
 }

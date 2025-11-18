@@ -54,7 +54,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         if(savedSubmission!=null){
             CommonDocument commonDocument=new CommonDocument();
-            commonDocument.setFId(savedSubmission.getSubmissionId());
+            commonDocument.setCommonDocId(savedSubmission.getSubmissionId());
             commonDocument.setFileName(resume.getOriginalFilename());
             commonDocument.setSize(resume.getSize());
             commonDocument.setData(resume.getBytes());

@@ -22,6 +22,6 @@ public class CommonDocument {
         @Column(columnDefinition = "LONGBLOB")
         private byte[] data;   // ← actual file bytes
 
-        private String fId;
+        private String commonDocId;
 }
 
