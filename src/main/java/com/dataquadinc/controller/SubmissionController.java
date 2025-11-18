@@ -33,8 +33,8 @@ public class SubmissionController {
     @PostMapping("/create-submission/{userId}")
     public ResponseEntity<SubmissionDTO> createSubmission(
             @PathVariable String userId,
-            @ModelAttribute SubmissionDTO submissionDTO,
-            @RequestParam(required = false) MultipartFile resume
+            @RequestPart("dto") SubmissionDTO submissionDTO,
+            @RequestPart(value = "resume", required = false) MultipartFile resume
     ) throws IOException {
         SubmissionDTO submission = submissionService.createSubmission(userId, submissionDTO, resume);
         return new ResponseEntity<>(submission, HttpStatus.CREATED);

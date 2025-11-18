@@ -46,11 +46,14 @@ public class SubmissionServiceImpl implements SubmissionService {
     public SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException {
 
         findIsDuplicateSubmission(submissionDTO);
-        Submissions submission=submissionsMapper.toEntity(submissionDTO);
+        Submissions submission=new Submissions();
 
-        submission.setCreatedBy(userId);
-        submission.setSubmissionId(generateSubmissionId());
-        Submissions savedSubmission=submissionsRepository.save(submission);
+        Submissions entity = submissionsMapper.toEntity(submissionDTO);
+        entity.setCreatedBy(userId);
+        entity.setSubmissionId(generateSubmissionId());
+        entity.setRecruiterId(userId);
+
+        Submissions savedSubmission=submissionsRepository.save(entity);
 
         if(savedSubmission!=null){
             CommonDocument commonDocument=new CommonDocument();
@@ -60,7 +63,7 @@ public class SubmissionServiceImpl implements SubmissionService {
             commonDocument.setData(resume.getBytes());
             commonDocument.setContentType(resume.getContentType());
             commonDocument.setUploadedAt(LocalDateTime.now());
-            commonDocumentRepository.save(commonDocument);
+            CommonDocument save = commonDocumentRepository.save(commonDocument);
         }
 
         SubmissionDTO dto = submissionsMapper.toDTO(savedSubmission);
@@ -135,7 +138,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     public void findIsDuplicateSubmission(SubmissionDTO submissionDTO){
 
         Submissions submissions=submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
-       if(submissions!=null){
+       if(submissions!=null&&submissions.getCandidateEmail()!=null){
            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID "+ submissions.getJobId()+"Submitted By "+submissions.getRecruiterId());
        }
     }

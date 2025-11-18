@@ -2,6 +2,8 @@ package com.dataquadinc.dtos;
 
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -12,6 +14,7 @@ public class SubmissionDTO {
     private String submissionId;
     private String candidateName;
     private String candidateEmail;
+    private LocalDate dob;
     private String mobileNumber;
     private String recruiterId;
     private String recruiterName;
