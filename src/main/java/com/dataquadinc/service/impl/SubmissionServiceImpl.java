@@ -71,7 +71,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public List<SubmissionDTO> getSubmission(String userId, String jobId) {
+    public List<SubmissionDTO> getSubmission(String userId) {
 
         String teamUrlL = teamUrl + userId;
         String userUrlL = userUrl + userId;
@@ -114,7 +114,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public List<SubmissionDTO> getSubmissionByTeamLead(String userId, String jobId) {
+    public List<SubmissionDTO> getSubmissionByTeamLead(String userId) {
         List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
                 .stream()
                 .map(submissionsMapper::toDTO).toList();

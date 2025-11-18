@@ -40,15 +40,15 @@ public class SubmissionController {
         return new ResponseEntity<>(submission, HttpStatus.CREATED);
     }
 
-    @GetMapping("/get-submission/{userId}/{jobId}")
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionForAdmin(@PathVariable String userId, @PathVariable String jobId) {
-        List<SubmissionDTO> submission = submissionService.getSubmission(userId, jobId);
+    @GetMapping("/get-submission/{userId}")
+    public ResponseEntity<List<SubmissionDTO>> getSubmissionForAdmin(@PathVariable String userId) {
+        List<SubmissionDTO> submission = submissionService.getSubmission(userId);
         return new ResponseEntity<>(submission, HttpStatus.OK);
     }
 
-    @GetMapping("/get-submission/self/{userId}/{jobId}")
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionForTeamLead(@PathVariable String userId, @PathVariable String jobId) {
-        List<SubmissionDTO> submissionByTeamLead = submissionService.getSubmissionByTeamLead(userId, jobId);
+    @GetMapping("/get-submission/self/{userId}")
+    public ResponseEntity<List<SubmissionDTO>> getSubmissionForTeamLead(@PathVariable String userId) {
+        List<SubmissionDTO> submissionByTeamLead = submissionService.getSubmissionByTeamLead(userId);
         return new ResponseEntity<>(submissionByTeamLead, HttpStatus.OK);
     }
 

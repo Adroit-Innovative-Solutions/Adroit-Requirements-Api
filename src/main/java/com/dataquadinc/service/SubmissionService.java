@@ -12,7 +12,7 @@ public interface SubmissionService {
 
     SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException;
 
-    List<SubmissionDTO> getSubmission(String userId, String jobId);
+    List<SubmissionDTO> getSubmission(String userId);
 
-    List<SubmissionDTO> getSubmissionByTeamLead(String userId, String jobId);
+    List<SubmissionDTO> getSubmissionByTeamLead(String userId);
 }
