@@ -100,7 +100,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                         .map(submissionsMapper::toDTO).toList();
                 return list;
             }
-            if (userDTO.getRoles().contains("RECRUITER")) {
+            if (userDTO.getRoles().contains("EMPLOYEE")) {
                 List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
                         .stream()
                         .map(submissionsMapper::toDTO).toList();
