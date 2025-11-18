@@ -13,5 +13,4 @@ public class UserAssignment {
 
     private String userId;
     private String userName;
-    private Set<String> roles;
 }

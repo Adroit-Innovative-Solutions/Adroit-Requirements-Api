@@ -13,5 +13,7 @@ public interface SubmissionService {
 
     SubmissionAddedResponse createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException;
 
-    List<SubmissionAddedResponse> getSubmission(String jobId);
+    List<SubmissionDTO> getSubmission(String userId, String jobId);
+
+    List<SubmissionDTO> getSubmissionByTeamLead(String userId, String jobId);
 }

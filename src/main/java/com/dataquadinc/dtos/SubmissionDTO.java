@@ -27,8 +27,7 @@ public class SubmissionDTO {
     private String communicationSkillsRating;
     private Double requiredTechnologiesRating;
     private String overallFeedback;
-    private String sslNumber;
-    private String relocation;
+    private boolean relocation;
     private String billRate;
     private String employmentType;
 
