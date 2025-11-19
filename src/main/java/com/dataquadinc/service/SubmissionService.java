@@ -2,6 +2,7 @@ package com.dataquadinc.service;
 
 
 import com.dataquadinc.dtos.SubmissionDTO;
+import com.dataquadinc.model.Submissions;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -15,4 +16,6 @@ public interface SubmissionService {
     List<SubmissionDTO> getSubmission(String userId);
 
     List<SubmissionDTO> getSubmissionByTeamLead(String userId);
+
+    SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume);
 }
