@@ -2,6 +2,8 @@ package com.dataquadinc.dtos;
 
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -12,11 +14,13 @@ public class SubmissionDTO {
     private String submissionId;
     private String candidateName;
     private String candidateEmail;
+    private LocalDate dob;
     private String mobileNumber;
     private String recruiterId;
     private String recruiterName;
     private String jobId;
     private String visaType;
+    private String billRate;
     private String currentCTC;
     private String expectedCTC;
     private String noticePeriod;
@@ -27,9 +31,7 @@ public class SubmissionDTO {
     private String communicationSkillsRating;
     private Double requiredTechnologiesRating;
     private String overallFeedback;
-    private String sslNumber;
-    private String relocation;
-    private String billRate;
+    private boolean relocation;
     private String employmentType;
 
 }

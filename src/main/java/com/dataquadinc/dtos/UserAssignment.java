@@ -2,6 +2,8 @@ package com.dataquadinc.dtos;
 
 import lombok.*;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @AllArgsConstructor
