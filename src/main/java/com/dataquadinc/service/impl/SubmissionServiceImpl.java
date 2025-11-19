@@ -90,6 +90,9 @@ public class SubmissionServiceImpl implements SubmissionService {
                 List<SubmissionDTO> list = submissionsRepository.findAll()
                         .stream()
                         .map(submissionsMapper::toDTO).toList();
+                if (list.isEmpty()) {
+                    throw new ResourceNotFoundException("User Don`t have any submissions");
+                }
                 return list;
             }
             if (userDTO.getRoles().contains("TEAMLEAD")) {
@@ -100,15 +103,21 @@ public class SubmissionServiceImpl implements SubmissionService {
                 List<SubmissionDTO> list = submissionsRepository.findByRecruiterIdIn(collect)
                         .stream()
                         .map(submissionsMapper::toDTO).toList();
+                if (list.isEmpty()) {
+                    throw new ResourceNotFoundException("User Don`t have any submissions");
+                }
                 return list;
             }
             if (userDTO.getRoles().contains("EMPLOYEE")) {
                 List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
                         .stream()
                         .map(submissionsMapper::toDTO).toList();
+                if (list.isEmpty()) {
+                    throw new ResourceNotFoundException("User Don`t have any submissions");
+                }
                 return list;
             }
-            throw new ResourceNotFoundException("User Not Found");
+            throw new ResourceNotFoundException("User Don`t have any submissions");
 
         } catch (Exception e) {
             throw new ResourceNotFoundException("Exception occurs while calling external api`s.");

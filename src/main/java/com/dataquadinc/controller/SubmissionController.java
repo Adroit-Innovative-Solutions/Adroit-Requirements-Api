@@ -3,6 +3,7 @@ package com.dataquadinc.controller;
 import com.dataquadinc.client.UserFeignClient;
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.SubmissionDTO;
+import com.dataquadinc.exceptions.ResourceNotFoundException;
 import com.dataquadinc.model.CommonDocument;
 import com.dataquadinc.service.CommonDocumentService;
 import com.dataquadinc.service.SubmissionService;
@@ -58,7 +59,7 @@ public class SubmissionController {
         CommonDocument commonDocument = commonDocumentService.findByFId(submissionId);
 
         if (commonDocument == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new ResourceNotFoundException("User Don`t have any submitted resumes ");
         }
 
         try {
@@ -73,7 +74,7 @@ public class SubmissionController {
                     .body(resource);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new ResourceNotFoundException("User Don`t have any submissions");
         }
     }
 
