@@ -10,6 +10,7 @@ import com.dataquadinc.repository.SubmissionsRepository;
 import com.dataquadinc.service.SubmissionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,24 +41,24 @@ public class SubmissionServiceImpl implements SubmissionService {
     CommonDocumentRepository commonDocumentRepository;
 
 
-    private final String teamUrl="https://mymulya.com/users/associated-users/";
-    private final String userUrl="https://mymulya.com/users/user/";
+    private final String teamUrl = "https://mymulya.com/users/associated-users/";
+    private final String userUrl = "https://mymulya.com/users/user/";
 
     @Override
     public SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException {
 
         findIsDuplicateSubmission(submissionDTO);
-        Submissions submission=new Submissions();
+        Submissions submission = new Submissions();
 
         Submissions entity = submissionsMapper.toEntity(submissionDTO);
         entity.setCreatedBy(userId);
         entity.setSubmissionId(generateSubmissionId());
         entity.setRecruiterId(userId);
 
-        Submissions savedSubmission=submissionsRepository.save(entity);
+        Submissions savedSubmission = submissionsRepository.save(entity);
 
-        if(savedSubmission!=null){
-            CommonDocument commonDocument=new CommonDocument();
+        if (savedSubmission != null) {
+            CommonDocument commonDocument = new CommonDocument();
             commonDocument.setCommonDocId(savedSubmission.getSubmissionId());
             commonDocument.setFileName(resume.getOriginalFilename());
             commonDocument.setSize(resume.getSize());
@@ -106,10 +108,10 @@ public class SubmissionServiceImpl implements SubmissionService {
                         .map(submissionsMapper::toDTO).toList();
                 return list;
             }
-            throw  new ResourceNotFoundException("User Not Found");
+            throw new ResourceNotFoundException("User Not Found");
 
         } catch (Exception e) {
-           throw  new ResourceNotFoundException("Exception occurs while calling external api`s.");
+            throw new ResourceNotFoundException("Exception occurs while calling external api`s.");
         }
     }
 
@@ -118,36 +120,36 @@ public class SubmissionServiceImpl implements SubmissionService {
         List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
                 .stream()
                 .map(submissionsMapper::toDTO).toList();
-        if(list.isEmpty()){
+        if (list.isEmpty()) {
             throw new ResourceNotFoundException("No Data Found");
-        }
-        else{
+        } else {
             return list;
         }
     }
 
-    public String generateSubmissionId(){
+    public String generateSubmissionId() {
 
-        String lastSubmissionId=submissionsRepository.findTopByOrderByJobIdDesc()
+        String lastSubmissionId = submissionsRepository.findTopByOrderByJobIdDesc()
                 .map(Submissions::getSubmissionId)
                 .orElse("SUB000000");
 
-        int num=Integer.parseInt(lastSubmissionId.replace("SUB",""))+1;
-        return String.format("SUB%06d",num);
+        int num = Integer.parseInt(lastSubmissionId.replace("SUB", "")) + 1;
+        return String.format("SUB%06d", num);
     }
-    public void findIsDuplicateSubmission(SubmissionDTO submissionDTO){
 
-        Submissions submissions=submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
-       if(submissions!=null&&submissions.getCandidateEmail()!=null){
-           throw new ResourceNotFoundException("Candidate Already Submitted For Job ID "+ submissions.getJobId()+"Submitted By "+submissions.getRecruiterId());
-       }
+    public void findIsDuplicateSubmission(SubmissionDTO submissionDTO) {
+
+        Submissions submissions = submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
+        if (submissions != null && submissions.getCandidateEmail() != null) {
+            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID " + submissions.getJobId() + "Submitted By " + submissions.getRecruiterId());
+        }
     }
 
     @Override
     public SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume) {
 
         Submissions existing = submissionsRepository.findById(submissionId)
-                .orElseThrow(()-> new ResourceNotFoundException("Submission not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
         existing.setCandidateName(submissionDTO.getCandidateName());
         existing.setCandidateEmail(submissionDTO.getCandidateEmail());
@@ -172,10 +174,10 @@ public class SubmissionServiceImpl implements SubmissionService {
         Submissions updated = submissionsRepository.save(existing);
 
         // Resume updation
-        if(resume != null && !resume.isEmpty()){
+        if (resume != null && !resume.isEmpty()) {
             CommonDocument commonDocument = commonDocumentRepository.findByCommonDocId(submissionId);
 
-            if(commonDocument == null){
+            if (commonDocument == null) {
                 commonDocument = new CommonDocument();
                 commonDocument.setCommonDocId(submissionId);
             }
@@ -193,4 +195,23 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         return submissionsMapper.toDTO(updated);
     }
+
+    @Override
+    public String deleteSubmission(String submissionId) {
+        Optional<Submissions> submissions = submissionsRepository.findById(submissionId);
+
+        if (submissions.isEmpty()) {
+            throw new ResourceNotFoundException("Submission not found");
+        }
+        submissionsRepository.delete(submissions.get());
+        CommonDocument byCommonDocId = commonDocumentRepository.findByCommonDocId(submissionId);
+        if (byCommonDocId == null) {
+            throw new ResourceNotFoundException("Resume not found");
+        }
+        commonDocumentRepository.delete(byCommonDocId);
+
+        return "Data Deleted";
+    }
+
+
 }

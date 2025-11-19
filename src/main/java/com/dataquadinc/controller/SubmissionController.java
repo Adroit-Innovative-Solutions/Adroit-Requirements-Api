@@ -86,4 +86,10 @@ public class SubmissionController {
         SubmissionDTO updated = submissionService.updateSubmission(submissionId, submissionDTO, resume);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
+
+    @DeleteMapping("/delete-submission/{submissionId}")
+    public ResponseEntity<String> deleteSubmission(@PathVariable String submissionId) {
+        String s = submissionService.deleteSubmission(submissionId);
+        return new ResponseEntity<>(s,HttpStatus.OK);
+    }
 }

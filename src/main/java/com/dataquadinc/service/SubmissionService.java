@@ -18,4 +18,6 @@ public interface SubmissionService {
     List<SubmissionDTO> getSubmissionByTeamLead(String userId);
 
     SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume);
+
+    String deleteSubmission(String submissionId);
 }
