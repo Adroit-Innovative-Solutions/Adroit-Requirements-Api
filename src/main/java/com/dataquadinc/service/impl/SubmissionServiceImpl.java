@@ -142,4 +142,55 @@ public class SubmissionServiceImpl implements SubmissionService {
            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID "+ submissions.getJobId()+"Submitted By "+submissions.getRecruiterId());
        }
     }
+
+    @Override
+    public SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume) {
+
+        Submissions existing = submissionsRepository.findById(submissionId)
+                .orElseThrow(()-> new ResourceNotFoundException("Submission not found"));
+
+        existing.setCandidateName(submissionDTO.getCandidateName());
+        existing.setCandidateEmail(submissionDTO.getCandidateEmail());
+        existing.setDob(submissionDTO.getDob());
+        existing.setMobileNumber(submissionDTO.getMobileNumber());
+        existing.setRecruiterId(submissionDTO.getRecruiterId());
+        existing.setRecruiterName(submissionDTO.getRecruiterName());
+        existing.setJobId(submissionDTO.getJobId());
+        existing.setVisaType(submissionDTO.getVisaType());
+        existing.setBillRate(submissionDTO.getBillRate());
+        existing.setCurrentCTC(submissionDTO.getCurrentCTC());
+        existing.setExpectedCTC(submissionDTO.getExpectedCTC());
+        existing.setNoticePeriod(submissionDTO.getNoticePeriod());
+        existing.setCurrentLocation(submissionDTO.getCurrentLocation());
+        existing.setTotalExperience(submissionDTO.getTotalExperience());
+        existing.setRelevantExperience(submissionDTO.getRelevantExperience());
+        existing.setQualification(submissionDTO.getQualification());
+        existing.setOverallFeedback(submissionDTO.getOverallFeedback());
+        existing.setRelocation(submissionDTO.isRelocation());
+        existing.setEmploymentType(submissionDTO.getEmploymentType());
+
+        Submissions updated = submissionsRepository.save(existing);
+
+        // Resume updation
+        if(resume != null && !resume.isEmpty()){
+            CommonDocument commonDocument = commonDocumentRepository.findByCommonDocId(submissionId);
+
+            if(commonDocument == null){
+                commonDocument = new CommonDocument();
+                commonDocument.setCommonDocId(submissionId);
+            }
+            commonDocument.setFileName(resume.getOriginalFilename());
+            commonDocument.setContentType(resume.getContentType());
+            commonDocument.setSize(resume.getSize());
+            commonDocument.setUploadedAt(LocalDateTime.now());
+            try {
+                commonDocument.setData(resume.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            commonDocumentRepository.save(commonDocument);
+        }
+
+        return submissionsMapper.toDTO(updated);
+    }
 }
