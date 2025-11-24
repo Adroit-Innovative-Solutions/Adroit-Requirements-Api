@@ -137,14 +137,14 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     public String generateSubmissionId() {
-
-        String lastSubmissionId = submissionsRepository.findTopByOrderByJobIdDesc()
+        String lastSubmissionId = submissionsRepository.findTopByOrderBySubmissionIdDesc()
                 .map(Submissions::getSubmissionId)
                 .orElse("SUB000000");
 
         int num = Integer.parseInt(lastSubmissionId.replace("SUB", "")) + 1;
         return String.format("SUB%06d", num);
     }
+
 
     public void findIsDuplicateSubmission(SubmissionDTO submissionDTO) {
 
