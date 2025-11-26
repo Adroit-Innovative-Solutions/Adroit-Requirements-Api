@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - master
-      - develop
-      
+      - develop  
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
