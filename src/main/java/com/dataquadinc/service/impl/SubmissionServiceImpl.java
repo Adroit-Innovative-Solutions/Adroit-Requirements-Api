@@ -13,6 +13,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -73,12 +75,30 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public List<SubmissionDTO> getSubmission(String userId) {
+    public SubmissionDTO getSubmissionById(String submissionId) {
+        log.info("Fetching submission by ID: {}", submissionId);
+
+        Optional<Submissions> submissionOptional = submissionsRepository.findById(submissionId);
+
+        if (submissionOptional.isEmpty()) {
+            throw new ResourceNotFoundException("Submission not found with id: " + submissionId);
+        }
+
+        return submissionsMapper.toDTO(submissionOptional.get());
+    }
+
+    @Override
+    public Page<SubmissionDTO> getSubmission(String userId, String keyword, Map<String, Object> filters, Pageable pageable)
+    {
 
         String teamUrlL = teamUrl + userId;
         String userUrlL = userUrl + userId;
 
         try {
+
+            System.out.println("Calling Team API: " + teamUrlL);
+            System.out.println("Calling User API: " + userUrlL);
+
             ResponseEntity<TeamDTO> teamResponse = restTemplate.getForEntity(teamUrlL, TeamDTO.class);
             ResponseEntity<ApiResponse> userResponse = restTemplate.getForEntity(userUrlL, ApiResponse.class);
             ObjectMapper mapper = new ObjectMapper();
@@ -87,52 +107,50 @@ public class SubmissionServiceImpl implements SubmissionService {
             UserDTO userDTO = mapper.convertValue(userResponse.getBody().getData(), UserDTO.class);
 
             if (userDTO.getRoles().contains("ADMIN")) {
-                List<SubmissionDTO> list = submissionsRepository.findAll()
-                        .stream()
-                        .map(submissionsMapper::toDTO).toList();
-                if (list.isEmpty()) {
+                Page<SubmissionDTO> page = submissionsRepository.findAll(keyword, pageable)
+                        .map(submissionsMapper::toDTO);
+                if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
                 }
-                return list;
+                return page;
             }
             if (userDTO.getRoles().contains("TEAMLEAD")) {
                 Set<String> collect = teamResponse.getBody().getEmployees().stream()
                         .map(r -> r.getUserId())
                         .collect(Collectors.toSet());
 
-                List<SubmissionDTO> list = submissionsRepository.findByRecruiterIdIn(collect)
-                        .stream()
-                        .map(submissionsMapper::toDTO).toList();
-                if (list.isEmpty()) {
+                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(collect, keyword, pageable)
+                        .map(submissionsMapper::toDTO);
+                if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
                 }
-                return list;
+                return page;
             }
             if (userDTO.getRoles().contains("EMPLOYEE")) {
-                List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
-                        .stream()
-                        .map(submissionsMapper::toDTO).toList();
-                if (list.isEmpty()) {
+                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, pageable)
+                        .map(submissionsMapper::toDTO);
+                if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
                 }
-                return list;
+                return page;
             }
             throw new ResourceNotFoundException("User Don`t have any submissions");
 
         } catch (Exception e) {
+            System.out.println("Exception details: " + e.getMessage());
+            e.printStackTrace();
             throw new ResourceNotFoundException("Exception occurs while calling external api`s.");
         }
     }
 
     @Override
-    public List<SubmissionDTO> getSubmissionByTeamLead(String userId) {
-        List<SubmissionDTO> list = submissionsRepository.findByRecruiterId(userId)
-                .stream()
-                .map(submissionsMapper::toDTO).toList();
-        if (list.isEmpty()) {
+    public Page<SubmissionDTO> getSubmissionByTeamLead(String userId, String keyword, Map<String,Object> filters, Pageable pageable) {
+        Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, pageable)
+                .map(submissionsMapper::toDTO);
+        if (page.getContent().isEmpty()) {
             throw new ResourceNotFoundException("No Data Found");
         } else {
-            return list;
+            return page;
         }
     }
 
