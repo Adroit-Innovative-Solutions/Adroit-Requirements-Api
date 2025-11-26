@@ -106,7 +106,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
             UserDTO userDTO = mapper.convertValue(userResponse.getBody().getData(), UserDTO.class);
 
-            if (userDTO.getRoles().contains("ADMIN")) {
+            if (userDTO.getRoles().contains("SUPERADMIN")) {
                 Page<SubmissionDTO> page = submissionsRepository.findAll(keyword, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
@@ -126,7 +126,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 }
                 return page;
             }
-            if (userDTO.getRoles().contains("EMPLOYEE")) {
+            if (userDTO.getRoles().contains("RECRUITER")) {
                 Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
