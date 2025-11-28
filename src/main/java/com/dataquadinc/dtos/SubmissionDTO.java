@@ -33,5 +33,6 @@ public class SubmissionDTO {
     private String overallFeedback;
     private boolean relocation;
     private String employmentType;
+    private String createdAt;
 
 }

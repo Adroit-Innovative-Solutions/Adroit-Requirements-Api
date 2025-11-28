@@ -62,7 +62,7 @@ public class SubmissionController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Map<String,Object> filters) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
 
         Page<SubmissionDTO> submission = submissionService.getSubmission(userId, keyword, filters, pageable);
         PageResponse<SubmissionDTO> pageResponse = new PageResponse<>(submission);
@@ -77,7 +77,7 @@ public class SubmissionController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Map<String, Object> filters) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
 
         Page<SubmissionDTO> submissionByTeamLead = submissionService.getSubmissionByTeamLead(userId, keyword, filters, pageable);
         PageResponse<SubmissionDTO> pageResponse = new PageResponse<>(submissionByTeamLead);
