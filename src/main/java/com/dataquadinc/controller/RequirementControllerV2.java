@@ -5,6 +5,7 @@ import com.dataquadinc.commons.PageResponse;
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
 import com.dataquadinc.service.RequirementService;
+import com.dataquadinc.service.RequirementServiceV2;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +29,15 @@ import java.util.Map;
 public class RequirementControllerV2 {
 
     @Autowired
-    RequirementService requirementService;
+    RequirementServiceV2 requirementServiceV2;
 
     @PostMapping("/post-requirement/{userId}")
     public ResponseEntity<ApiResponse<RequirementAddedResponse>> postRequirement(
             @PathVariable String userId,
             @ModelAttribute RequirementDTOV2 requirementDTO,
-            @RequestParam (required = false) String jobId,
             @RequestParam (value = "jobDescriptionFile",required = false) MultipartFile jobDescriptionFile) throws IOException {
 
+        requirementServiceV2.save(userId,requirementDTO,jobDescriptionFile);
 
         return null;
     }
