@@ -32,6 +32,9 @@ public class RequirementReqDTOV2 {
     private String billRate;
     private String remarks;
 
+    private String submissions;
+    private String interviews;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

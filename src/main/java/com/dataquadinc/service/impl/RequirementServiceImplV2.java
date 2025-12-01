@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Optional;
 
 @Slf4j
@@ -220,7 +221,46 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             
             Page<RequirementV2> requirements = requirementRepositoryV2.findAll(spec, pageable);
             
-            return PageResponse.of(requirements);
+            Page<RequirementResDTOV2> requirementDTOs = requirements.map(requirement -> {
+                RequirementResDTOV2 dto = new RequirementResDTOV2();
+                dto.setJobId(requirement.getJobId());
+                dto.setJobTitle(requirement.getJobTitle());
+                dto.setClientId(requirement.getClientId());
+                dto.setClientName(requirement.getClientName());
+                dto.setJobType(requirement.getJobType());
+                dto.setLocation(requirement.getLocation());
+                dto.setJobMode(requirement.getJobMode());
+                dto.setExperienceRequired(requirement.getExperienceRequired());
+                dto.setNoticePeriod(requirement.getNoticePeriod());
+                dto.setQualification(requirement.getQualification());
+                dto.setNoOfPositions(requirement.getNoOfPositions());
+                dto.setVisaType(requirement.getVisaType());
+                dto.setJobDescription(requirement.getJobDescription());
+                dto.setBillRate(requirement.getBillRate());
+                dto.setRemarks(requirement.getRemarks());
+                dto.setCreatedAt(requirement.getCreatedAt());
+                dto.setUpdatedAt(requirement.getUpdatedAt());
+                dto.setAssignedById(requirement.getAssignedById());
+                dto.setAssignedByName(requirement.getAssignedByName());
+                dto.setStatus(requirement.getStatus());
+                dto.setInterviews(requirement.getInterviews());
+                dto.setSubmissions(requirement.getSubmissions());
+                
+                List<JobRecruiterDto> assignedUsers = jobRecruiterRepositoryV2.findByRequirementId(requirement.getJobId())
+                    .stream()
+                    .map(jr -> {
+                        JobRecruiterDto jrDto = new JobRecruiterDto();
+                        jrDto.setUserId(jr.getUserId());
+                        jrDto.setUserName(jr.getUserName());
+                        return jrDto;
+                    })
+                    .collect(Collectors.toList());
+                dto.setAssignedUsers(assignedUsers);
+                
+                return dto;
+            });
+            
+            return PageResponse.of(requirementDTOs);
             
         } catch (Exception e) {
             throw new GlobalException("Exception occurs while calling external APIs: " + e.getMessage());
