@@ -28,6 +28,10 @@ public class PageResponse<T> {
 
     public PageResponse() {
     }
+    
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return new PageResponse<>(page);
+    }
 
     public List<T> getContent() {
         return content;

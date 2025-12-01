@@ -1,5 +1,6 @@
 package com.dataquadinc.utils;
 
+import com.dataquadinc.model.JobRecruiterV2;
 import com.dataquadinc.model.Requirement;
 import com.dataquadinc.model.RequirementV2;
 import jakarta.persistence.criteria.Join;
@@ -33,7 +34,7 @@ public class RequirementSpecificationsV2 {
             if (keyword == null || keyword.trim().isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            String pattern = "%" + keyword + "%";
+            String pattern = "%" + keyword.toLowerCase() + "%";
 
             List<Predicate> predicates = new ArrayList<>();
 
@@ -85,7 +86,7 @@ public class RequirementSpecificationsV2 {
                             case "assignedById":
                             case "assignedByName":
                             case "clientId":
-                                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString()+"%"));
+                                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),"%" + value.toString().toLowerCase() + "%"));
                                 break;
                             case "noOfPositions":
                                 try {
@@ -136,10 +137,17 @@ public class RequirementSpecificationsV2 {
     ){
         return Specification.where(isNotDeleted())
                 .and(((root, query, criteriaBuilder) ->{
-                     // JOIN RequirementV2
-                    // and JobRecruiters
-                    Join<Object,Object> jrJoin=root.join("jobRecruiters", JoinType.INNER);
-                    return criteriaBuilder.equal(jrJoin.get("userId"),userId);
+                    // Use subquery to find requirements assigned to user
+                    var subquery = query.subquery(String.class);
+                    var jobRecruiterRoot = subquery.from(JobRecruiterV2.class);
+                    subquery.select(jobRecruiterRoot.get("requirementId"))
+                           .where(criteriaBuilder.equal(jobRecruiterRoot.get("userId"), userId));
+                    
+                    // Combine subquery with direct assignedById check
+                    Predicate assignedToUser = criteriaBuilder.in(root.get("jobId")).value(subquery);
+                    Predicate assignedByUser = criteriaBuilder.equal(root.get("assignedById"), userId);
+                    
+                    return criteriaBuilder.or(assignedToUser, assignedByUser);
                 }))
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));

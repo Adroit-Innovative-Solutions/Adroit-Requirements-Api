@@ -1,28 +1,35 @@
 package com.dataquadinc.service.impl;
 
 import com.dataquadinc.client.UserFeignClient;
-import com.dataquadinc.dtos.ApiResponse;
-import com.dataquadinc.dtos.RequirementDTOV2;
-import com.dataquadinc.dtos.UserAssignment;
+import com.dataquadinc.commons.PageResponse;
+import com.dataquadinc.dtos.*;
 import com.dataquadinc.exceptions.GlobalException;
-import com.dataquadinc.exceptions.GlobalExceptionHandler;
 import com.dataquadinc.model.CommonDocument;
 import com.dataquadinc.model.JobRecruiterV2;
-import com.dataquadinc.model.Requirement;
 import com.dataquadinc.model.RequirementV2;
 import com.dataquadinc.repository.CommonDocumentRepository;
 import com.dataquadinc.repository.JobRecruiterRepositoryV2;
 import com.dataquadinc.repository.RequirementRepositoryV2;
 import com.dataquadinc.service.RequirementServiceV2;
+import com.dataquadinc.utils.RequirementSpecificationsV2;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -38,11 +45,17 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
     @Autowired
     UserFeignClient userFeignClient;
+    
+    @Autowired
+    RestTemplate restTemplate;
+    
+    private final String teamUrl = "https://mymulya.com/users/associated-users/";
+    private final String userUrl = "https://mymulya.com/users/user/";
 
 
     @Override
     @Transactional
-    public ApiResponse save(String userId, RequirementDTOV2 requirementDTO, MultipartFile jobDescriptionFile) throws IOException {
+    public ApiResponse save(String userId, RequirementReqDTOV2 requirementDTO, MultipartFile jobDescriptionFile) throws IOException {
 
         requirementRepositoryV2.findByClientIdAndJobTitleAndExperienceRequired(
                 requirementDTO.getClientId(),
@@ -82,9 +95,9 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
         RequirementV2 save = requirementRepositoryV2.save(requirement);
 
-        if (save!=null&&requirementDTO.getAssignedUsers()!=null&&requirementDTO.getAssignedUsers().size()>0){
+        if (save != null && requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
             requirementDTO.getAssignedUsers()
-                    .forEach(user->{
+                    .forEach(user -> {
                         JobRecruiterV2 jobRecruiter = new JobRecruiterV2();
                         jobRecruiter.setUserId(user);
                         jobRecruiter.setUserName(getUserNameFromUserId(user));
@@ -93,7 +106,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
                     });
         }
 
-        if (jobDescriptionFile!=null&&save!=null){
+        if (jobDescriptionFile != null && save != null) {
             CommonDocument commonDocument = new CommonDocument();
             commonDocument.setCommonDocId(save.getJobId());
             commonDocument.setFileName(jobDescriptionFile.getOriginalFilename());
@@ -104,30 +117,109 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             CommonDocument save1 = commonDocumentRepository.save(commonDocument);
         }
 
-        if (save!=null){
-            log.info("Requirement Saved Successfully For Job ID {}",save.getJobId());
+        if (save != null) {
+            log.info("Requirement Saved Successfully For Job ID {}", save.getJobId());
         }
 
-        ApiResponse apiResponse =new ApiResponse<>(true,"Requirement Saved Successfully",save.getJobId(),null);
+        ApiResponse apiResponse = new ApiResponse<>(true, "Requirement Saved Successfully", save.getJobId(), null);
 
         return apiResponse;
 
     }
 
-    public String generateJobId(){
-        String lastJobId=requirementRepositoryV2.findTopByOrderByJobIdDesc()
+    @Override
+    public ApiResponse getRequirement(String jobId) {
+        ApiResponse apiResponse = new ApiResponse();
+        RequirementV2 requirement = requirementRepositoryV2.findById(jobId)
+                .orElseThrow(() -> new GlobalException("No Requirement Found With ID " + jobId));
+
+        RequirementResDTOV2 requirementResDTOV2 = new RequirementResDTOV2();
+        requirementResDTOV2.setJobId(requirement.getJobId());
+        requirementResDTOV2.setJobTitle(requirement.getJobTitle());
+        requirementResDTOV2.setClientId(requirement.getClientId());
+        requirementResDTOV2.setClientName(requirement.getClientName());
+        requirementResDTOV2.setJobType(requirement.getJobType());
+        requirementResDTOV2.setLocation(requirement.getLocation());
+        requirementResDTOV2.setJobMode(requirement.getJobMode());
+        requirementResDTOV2.setExperienceRequired(requirement.getExperienceRequired());
+        requirementResDTOV2.setNoticePeriod(requirement.getNoticePeriod());
+        requirementResDTOV2.setQualification(requirement.getQualification());
+        requirementResDTOV2.setNoOfPositions(requirement.getNoOfPositions());
+        requirementResDTOV2.setVisaType(requirement.getVisaType());
+        requirementResDTOV2.setJobDescription(requirement.getJobDescription());
+        requirementResDTOV2.setBillRate(requirement.getBillRate());
+        requirementResDTOV2.setRemarks(requirement.getRemarks());
+        requirementResDTOV2.setCreatedAt(requirement.getCreatedAt());
+        requirementResDTOV2.setUpdatedAt(requirement.getUpdatedAt());
+        requirementResDTOV2.setAssignedById(requirement.getAssignedById());
+        requirementResDTOV2.setAssignedByName(requirement.getAssignedByName());
+        requirementResDTOV2.setStatus(requirement.getStatus());
+        List<JobRecruiterDto> jobRecruiterDto = new ArrayList<JobRecruiterDto>();
+        List<JobRecruiterV2> byRequirementId = jobRecruiterRepositoryV2.findByRequirementId(jobId);
+        byRequirementId.forEach(jobRecruiter -> {
+            JobRecruiterDto jobRecruiterDto1 = new JobRecruiterDto();
+            jobRecruiterDto1.setUserId(jobRecruiter.getUserId());
+            jobRecruiterDto1.setUserName(jobRecruiter.getUserName());
+            jobRecruiterDto.add(jobRecruiterDto1);
+        });
+        requirementResDTOV2.setAssignedUsers(jobRecruiterDto);
+        requirementResDTOV2.setInterviews(requirement.getInterviews());
+        requirementResDTOV2.setSubmissions(requirement.getSubmissions());
+
+
+        apiResponse.setSuccess(true);
+        apiResponse.setMessage("Requirement Found");
+        apiResponse.setData(requirementResDTOV2);
+        return apiResponse;
+    }
+
+    public String generateJobId() {
+        String lastJobId = requirementRepositoryV2.findTopByOrderByJobIdDesc()
                 .map(RequirementV2::getJobId)
                 .orElse("JOB000000");
 
-        int num=Integer.parseInt(lastJobId.replace("JOB",""))+1;
-        return String.format("JOB%06d",num);
+        int num = Integer.parseInt(lastJobId.replace("JOB", "")) + 1;
+        return String.format("JOB%06d", num);
     }
 
-    public String getUserNameFromUserId(String userId){
-        List<UserAssignment> user=userFeignClient.getUserIdsAndUserNames(List.of(userId)).getBody();
-        if (user==null||user.isEmpty()){
+    public String getUserNameFromUserId(String userId) {
+        List<UserAssignment> user = userFeignClient.getUserIdsAndUserNames(List.of(userId)).getBody();
+        if (user == null || user.isEmpty()) {
             throw new GlobalException("Recruiters ids are not correct");
         }
         return user.getFirst().getUserName();
+    }
+    
+    public PageResponse getRequirementByUserId(String userId, String keyword, Pageable pageable, Map<String, Object> filters) {
+        String teamUrlL = teamUrl + userId;
+        String userUrlL = userUrl + userId;
+        
+        try {
+            ResponseEntity<TeamDTO> teamResponse = restTemplate.getForEntity(teamUrlL, TeamDTO.class);
+            ResponseEntity<ApiResponse> userResponse = restTemplate.getForEntity(userUrlL, ApiResponse.class);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            
+            UserDTO userDTO = mapper.convertValue(userResponse.getBody().getData(), UserDTO.class);
+            
+            Specification<RequirementV2> spec;
+            
+            if (userDTO.getRoles().contains("SUPERADMIN")) {
+                spec = RequirementSpecificationsV2.allRequirements(keyword, filters);
+            } else if (userDTO.getRoles().contains("TEAMLEAD")) {
+                spec = RequirementSpecificationsV2.requirementsAssignedByUser(userId, keyword, filters);
+            } else if (userDTO.getRoles().contains("RECRUITER")) {
+                spec = RequirementSpecificationsV2.requirementsAssignedToUser(userId, keyword, filters);
+            } else {
+                throw new GlobalException("User doesn't have any submissions");
+            }
+            
+            Page<RequirementV2> requirements = requirementRepositoryV2.findAll(spec, pageable);
+            
+            return PageResponse.of(requirements);
+            
+        } catch (Exception e) {
+            throw new GlobalException("Exception occurs while calling external APIs: " + e.getMessage());
+        }
     }
 }

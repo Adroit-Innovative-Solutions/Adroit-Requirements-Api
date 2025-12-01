@@ -11,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RequirementDTOV2 {
+public class RequirementResDTOV2 {
 
     private String jobId;
     private String jobTitle;
@@ -24,7 +24,6 @@ public class RequirementDTOV2 {
     private String noticePeriod;
     private String relevantExperience;
     private String qualification;
-    private String salaryPackage;
     private int noOfPositions;
     private String jobDescription;
     private String status;
@@ -37,5 +36,8 @@ public class RequirementDTOV2 {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Set<String> assignedUsers;
+    private String submissions;
+    private String interviews;
+
+    private List<JobRecruiterDto> assignedUsers;
 }
