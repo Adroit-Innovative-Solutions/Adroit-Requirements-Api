@@ -26,7 +26,7 @@ public class RequirementControllerV2 {
             @ModelAttribute RequirementDTOV2 requirementDTO,
             @RequestParam (value = "jobDescriptionFile",required = false) MultipartFile jobDescriptionFile) throws IOException {
 
-        com.dataquadinc.dtos.ApiResponse save = requirementServiceV2.save(userId, requirementDTO, jobDescriptionFile);
+        ApiResponse save = requirementServiceV2.save(userId, requirementDTO, jobDescriptionFile);
         return save;
     }
 

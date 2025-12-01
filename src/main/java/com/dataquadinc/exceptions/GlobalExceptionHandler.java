@@ -32,4 +32,11 @@ public class GlobalExceptionHandler {
                 ApiResponse.error(ex.getMessage(), HttpStatus.NOT_FOUND)
         );
     }
+
+    @ExceptionHandler(GlobalException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGlobalException(GlobalException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiResponse.error(ex.getMessage(), HttpStatus.BAD_REQUEST)
+        );
+    }
 }

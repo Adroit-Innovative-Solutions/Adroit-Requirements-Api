@@ -16,7 +16,13 @@ import java.util.Optional;
 
 public interface RequirementRepositoryV2 extends JpaRepository<RequirementV2,String> , JpaSpecificationExecutor<RequirementV2> {
 
-    Optional<Requirement> findTopByOrderByJobIdDesc();
+    Optional<RequirementV2> findByClientIdAndJobTitleAndExperienceRequired(
+            String clientId,
+            String jobTitle,
+            String experienceRequired
+    );
+
+    Optional<RequirementV2> findTopByOrderByJobIdDesc();
 
     default Page<RequirementV2> allRequirements(String keyword, Map<String,Object> filters, Pageable pageable){
          return findAll(RequirementSpecificationsV2.allRequirements(keyword,filters),pageable);

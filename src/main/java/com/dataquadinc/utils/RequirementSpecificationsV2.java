@@ -136,7 +136,8 @@ public class RequirementSpecificationsV2 {
     ){
         return Specification.where(isNotDeleted())
                 .and(((root, query, criteriaBuilder) ->{
-                     // JOIN Requirement and JobRecruiters
+                     // JOIN RequirementV2
+                    // and JobRecruiters
                     Join<Object,Object> jrJoin=root.join("jobRecruiters", JoinType.INNER);
                     return criteriaBuilder.equal(jrJoin.get("userId"),userId);
                 }))

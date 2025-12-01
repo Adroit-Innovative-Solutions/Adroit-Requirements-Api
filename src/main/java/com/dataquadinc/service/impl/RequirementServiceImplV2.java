@@ -4,6 +4,8 @@ import com.dataquadinc.client.UserFeignClient;
 import com.dataquadinc.dtos.ApiResponse;
 import com.dataquadinc.dtos.RequirementDTOV2;
 import com.dataquadinc.dtos.UserAssignment;
+import com.dataquadinc.exceptions.GlobalException;
+import com.dataquadinc.exceptions.GlobalExceptionHandler;
 import com.dataquadinc.model.CommonDocument;
 import com.dataquadinc.model.JobRecruiterV2;
 import com.dataquadinc.model.Requirement;
@@ -12,6 +14,7 @@ import com.dataquadinc.repository.CommonDocumentRepository;
 import com.dataquadinc.repository.JobRecruiterRepositoryV2;
 import com.dataquadinc.repository.RequirementRepositoryV2;
 import com.dataquadinc.service.RequirementServiceV2;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,7 +41,17 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
 
     @Override
+    @Transactional
     public ApiResponse save(String userId, RequirementDTOV2 requirementDTO, MultipartFile jobDescriptionFile) throws IOException {
+
+        requirementRepositoryV2.findByClientIdAndJobTitleAndExperienceRequired(
+                requirementDTO.getClientId(),
+                requirementDTO.getJobTitle(),
+                requirementDTO.getExperienceRequired()
+        ).ifPresent(requirement -> {
+            throw new GlobalException("Requirement already exists with the same client, job title, and experience required.");
+        });
+
         RequirementV2 requirement = new RequirementV2();
 
         requirement.setJobId(generateJobId());
@@ -69,7 +82,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
         RequirementV2 save = requirementRepositoryV2.save(requirement);
 
-        if (save!=null){
+        if (save!=null&&requirementDTO.getAssignedUsers()!=null&&requirementDTO.getAssignedUsers().size()>0){
             requirementDTO.getAssignedUsers()
                     .forEach(user->{
                         JobRecruiterV2 jobRecruiter = new JobRecruiterV2();
@@ -101,11 +114,9 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
     }
 
-
-
     public String generateJobId(){
         String lastJobId=requirementRepositoryV2.findTopByOrderByJobIdDesc()
-                .map(Requirement::getJobId)
+                .map(RequirementV2::getJobId)
                 .orElse("JOB000000");
 
         int num=Integer.parseInt(lastJobId.replace("JOB",""))+1;
@@ -114,6 +125,9 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
     public String getUserNameFromUserId(String userId){
         List<UserAssignment> user=userFeignClient.getUserIdsAndUserNames(List.of(userId)).getBody();
+        if (user==null||user.isEmpty()){
+            throw new GlobalException("Recruiters ids are not correct");
+        }
         return user.getFirst().getUserName();
     }
 }
