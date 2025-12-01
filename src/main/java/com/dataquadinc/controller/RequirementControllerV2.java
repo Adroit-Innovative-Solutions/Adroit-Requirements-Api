@@ -6,8 +6,10 @@ import com.dataquadinc.dtos.*;
 import com.dataquadinc.service.RequirementServiceV2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,4 +58,24 @@ public class RequirementControllerV2 {
         return requirementServiceV2.getRequirementByUserId(userId, keyword, pageable, filters);
     }
 
+    @DeleteMapping("/delete-requirement/{jobId}")
+    public ApiResponse deleteRequirement(@PathVariable String jobId) {
+        ApiResponse delete = requirementServiceV2.delete(jobId);
+        return delete;
+    }
+
+    @GetMapping("/download-jd/{jobId}")
+    public ResponseEntity<ByteArrayResource> downloadJobDescription(@PathVariable String jobId) {
+        return requirementServiceV2.downloadJobDescription(jobId);
+    }
+
+    @PostMapping("/update-requirement/{jobId}")
+    public ApiResponse updateRequirement(
+            @PathVariable String jobId,
+            @ModelAttribute RequirementReqDTOV2 requirementDTO,
+            @RequestParam(value = "jobDescriptionFile", required = false) MultipartFile jobDescriptionFile) throws IOException {
+
+        ApiResponse update = requirementServiceV2.save(jobId, requirementDTO, jobDescriptionFile);
+        return update;
+    }
 }

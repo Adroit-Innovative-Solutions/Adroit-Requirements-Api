@@ -17,9 +17,12 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -220,6 +224,44 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             
         } catch (Exception e) {
             throw new GlobalException("Exception occurs while calling external APIs: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse delete(String jobId){
+        Optional<RequirementV2> requirement = requirementRepositoryV2.findById(jobId);
+
+        if(requirement.isEmpty()){
+            return new ApiResponse(false, "Requirement not found", null,null);
+        }
+        requirementRepositoryV2.deleteById(jobId);
+        jobRecruiterRepositoryV2.deleteByRequirementId(jobId);
+        commonDocumentRepository.deleteByCommonDocId(jobId);
+
+        return new ApiResponse(true, "Requirement deleted successfully", jobId, null);
+    }
+
+    @Override
+    public ResponseEntity<ByteArrayResource> downloadJobDescription(String jobId) {
+        CommonDocument commonDocument = commonDocumentRepository.findByCommonDocId(jobId);
+        if (commonDocument == null) {
+            log.error("Job Description not found for Job ID {}", jobId);
+            throw new RuntimeException("Job description file not found for Job ID: " + jobId);
+        }
+
+        try {
+            ByteArrayResource resource = new ByteArrayResource(commonDocument.getData());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(commonDocument.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + commonDocument.getFileName() + "\"")
+                    .contentLength(commonDocument.getSize())
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error downloading job description for Job ID {}: {}", jobId, e.getMessage());
+            throw new RuntimeException("Error downloading job description: " + e.getMessage());
         }
     }
 }

@@ -3,7 +3,9 @@ package com.dataquadinc.service;
 import com.dataquadinc.commons.PageResponse;
 import com.dataquadinc.dtos.ApiResponse;
 import com.dataquadinc.dtos.RequirementReqDTOV2;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -15,4 +17,9 @@ public interface RequirementServiceV2 {
     ApiResponse getRequirement(String jobId);
     
     PageResponse getRequirementByUserId(String userId, String keyword, Pageable pageable, Map<String, Object> filters);
+
+    ResponseEntity<ByteArrayResource> downloadJobDescription(String jobId);
+
+    ApiResponse delete(String jobId);
+
 }
