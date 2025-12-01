@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -30,12 +31,11 @@ public class RequirementDTOV2 {
     private String visaType;
     private String assignedById;
     private String assignedByName;
-
-    private String submissions;
-    private String interviews;
+    private String billRate;
+    private String remarks;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private List<JobRecruiterDto> assignedUsers;
+    private Set<String> assignedUsers;
 }
