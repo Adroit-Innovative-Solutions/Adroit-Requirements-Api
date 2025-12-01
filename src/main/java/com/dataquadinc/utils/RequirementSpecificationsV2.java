@@ -116,7 +116,7 @@ public class RequirementSpecificationsV2 {
     }
 
     public static Specification<RequirementV2> allRequirements(String keyword,Map<String,Object> filters){
-        return Specification.<Requirement>where(isNotDeleted())
+        return Specification.where(isNotDeleted())
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
     }

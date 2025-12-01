@@ -8,5 +8,4 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.Set;
 
 public interface JobRecruiterRepositoryV2 extends JpaRepository<JobRecruiterV2,Long> , JpaSpecificationExecutor<JobRecruiterV2> {
-    Set<JobRecruiter> findByRequirementJobId(String jobId);
 }
