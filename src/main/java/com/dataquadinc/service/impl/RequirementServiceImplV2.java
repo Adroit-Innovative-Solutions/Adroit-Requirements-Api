@@ -62,6 +62,59 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
     @Transactional
     public ApiResponse save(String userId, RequirementReqDTOV2 requirementDTO, MultipartFile jobDescriptionFile) throws IOException {
 
+        if(requirementDTO.getJobId()!=null){
+            RequirementV2 requirementV2 = requirementRepositoryV2.findById(requirementDTO.getJobId()).orElseThrow(() -> new GlobalException("Requirement not found"));
+            requirementV2.setJobTitle(requirementDTO.getJobTitle());
+            requirementV2.setClientId(requirementDTO.getClientId());
+            requirementV2.setClientName(requirementDTO.getClientName());
+            requirementV2.setJobType(requirementDTO.getJobType());
+            requirementV2.setLocation(requirementDTO.getLocation());
+            requirementV2.setJobMode(requirementDTO.getJobMode());
+            requirementV2.setExperienceRequired(requirementDTO.getExperienceRequired());
+            requirementV2.setNoticePeriod(requirementDTO.getNoticePeriod());
+            requirementV2.setQualification(requirementDTO.getQualification());
+            requirementV2.setNoOfPositions(requirementDTO.getNoOfPositions());
+            requirementV2.setVisaType(requirementDTO.getVisaType());
+            requirementV2.setBillRate(requirementDTO.getBillRate());
+            requirementV2.setRemarks(requirementDTO.getRemarks());
+            requirementV2.setJobDescription(requirementDTO.getJobDescription());
+            requirementV2.setAssignedById(requirementDTO.getAssignedById());
+            requirementV2.setAssignedByName(requirementDTO.getAssignedByName());
+            requirementV2.setUpdatedAt(LocalDateTime.now());
+            requirementV2.setUpdatedBy(userId);
+            requirementRepositoryV2.save(requirementV2);
+
+            if (requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
+                jobRecruiterRepositoryV2.deleteByRequirementId(requirementV2.getJobId());
+                requirementDTO.getAssignedUsers()
+                        .forEach(user -> {
+                            JobRecruiterV2 jobRecruiter = new JobRecruiterV2();
+                            jobRecruiter.setUserId(user);
+                            jobRecruiter.setUserName(getUserNameFromUserId(user));
+                            jobRecruiter.setRequirementId(requirementV2.getJobId());
+                            jobRecruiterRepositoryV2.save(jobRecruiter);
+                        });
+            }
+
+            if (jobDescriptionFile != null) {
+                commonDocumentRepository.deleteByCommonDocId(requirementV2.getJobId());
+                CommonDocument commonDocument = new CommonDocument();
+                commonDocument.setCommonDocId(requirementV2.getJobId());
+                commonDocument.setFileName(jobDescriptionFile.getOriginalFilename());
+                commonDocument.setSize(jobDescriptionFile.getSize());
+                commonDocument.setData(jobDescriptionFile.getBytes());
+                commonDocument.setContentType(jobDescriptionFile.getContentType());
+                commonDocumentRepository.save(commonDocument);
+            }
+
+            if (requirementV2 != null) {
+                log.info("Requirement Updated Successfully For Job ID {}", requirementV2.getJobId());
+            }
+
+            ApiResponse apiResponse = new ApiResponse<>(true, "Requirement Saved Successfully", requirementV2.getJobId(), null);
+            return apiResponse;
+        }
+
         requirementRepositoryV2.findByClientIdAndJobTitleAndExperienceRequired(
                 requirementDTO.getClientId(),
                 requirementDTO.getJobTitle(),
@@ -71,7 +124,6 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         });
 
         RequirementV2 requirement = new RequirementV2();
-
         requirement.setJobId(generateJobId());
         requirement.setJobTitle(requirementDTO.getJobTitle());
         requirement.setClientId(requirementDTO.getClientId());
@@ -97,6 +149,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
         // BaseEntity fields (if BaseEntity has createdBy)
         requirement.setCreatedBy(userId);
+        requirement.setUpdatedAt(null);
 
         RequirementV2 save = requirementRepositoryV2.save(requirement);
 
@@ -107,6 +160,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
                         jobRecruiter.setUserId(user);
                         jobRecruiter.setUserName(getUserNameFromUserId(user));
                         jobRecruiter.setRequirementId(save.getJobId());
+                        jobRecruiter.setCreatedBy(userId);
                         jobRecruiterRepositoryV2.save(jobRecruiter);
                     });
         }
@@ -118,7 +172,6 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             commonDocument.setSize(jobDescriptionFile.getSize());
             commonDocument.setData(jobDescriptionFile.getBytes());
             commonDocument.setContentType(jobDescriptionFile.getContentType());
-            commonDocument.setUploadedAt(LocalDateTime.now());
             CommonDocument save1 = commonDocumentRepository.save(commonDocument);
         }
 
@@ -127,7 +180,6 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         }
 
         ApiResponse apiResponse = new ApiResponse<>(true, "Requirement Saved Successfully", save.getJobId(), null);
-
         return apiResponse;
 
     }

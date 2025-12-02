@@ -69,13 +69,13 @@ public class RequirementControllerV2 {
         return requirementServiceV2.downloadJobDescription(jobId);
     }
 
-    @PostMapping("/update-requirement/{jobId}")
+    @PutMapping("/update-requirement/{userId}")
     public ApiResponse updateRequirement(
-            @PathVariable String jobId,
+            @PathVariable String userId,
             @ModelAttribute RequirementReqDTOV2 requirementDTO,
             @RequestParam(value = "jobDescriptionFile", required = false) MultipartFile jobDescriptionFile) throws IOException {
 
-        ApiResponse update = requirementServiceV2.save(jobId, requirementDTO, jobDescriptionFile);
+        ApiResponse update = requirementServiceV2.save(userId, requirementDTO, jobDescriptionFile);
         return update;
     }
 }
