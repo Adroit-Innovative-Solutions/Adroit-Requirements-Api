@@ -40,6 +40,11 @@ public class RequirementV2 extends BaseEntity{
     private String submissions;
     private String interviews;
 
+    @Column(columnDefinition = "JSON")
+    private String teamsLeadIds;
+
+
+
     @PrePersist
     protected void onCreate(){
         super.onCreate();

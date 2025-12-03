@@ -153,6 +153,20 @@ public class RequirementSpecificationsV2 {
                 .and(createFiltersSpecification(filters));
     }
 
+    public static Specification<RequirementV2> requirementsForTeamLead(
+            String userId, String keyword, Map<String, Object> filters
+    ) {
+        return Specification.where(isNotDeleted())
+                .and(((root, query, criteriaBuilder) -> {
+                    // Check if userId is present in teamsLeadIds JSON field OR assignedById
+                    Predicate inTeamLeadIds = criteriaBuilder.like(root.get("teamsLeadIds"), "%" + userId + "%");
+                    Predicate assignedByUser = criteriaBuilder.equal(root.get("assignedById"), userId);
+                    return criteriaBuilder.or(inTeamLeadIds, assignedByUser);
+                }))
+                .and(createSearchSpecification(keyword))
+                .and(createFiltersSpecification(filters));
+    }
+
     public static Specification<RequirementV2> isNotDeleted() {
         return((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));

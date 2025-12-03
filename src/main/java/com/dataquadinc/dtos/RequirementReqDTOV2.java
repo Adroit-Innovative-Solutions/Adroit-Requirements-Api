@@ -39,4 +39,6 @@ public class RequirementReqDTOV2 {
     private LocalDateTime updatedAt;
 
     private Set<String> assignedUsers;
+
+    private Set<String> teamsLeadIds;
 }

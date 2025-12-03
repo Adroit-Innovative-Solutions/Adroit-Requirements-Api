@@ -12,6 +12,7 @@ import com.dataquadinc.repository.JobRecruiterRepositoryV2;
 import com.dataquadinc.repository.RequirementRepositoryV2;
 import com.dataquadinc.service.RequirementServiceV2;
 import com.dataquadinc.utils.RequirementSpecificationsV2;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
@@ -30,11 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -56,6 +54,9 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
     
     private final String teamUrl = "https://mymulya.com/users/associated-users/";
     private final String userUrl = "https://mymulya.com/users/user/";
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
 
     @Override
@@ -82,6 +83,8 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             requirementV2.setAssignedByName(requirementDTO.getAssignedByName());
             requirementV2.setUpdatedAt(LocalDateTime.now());
             requirementV2.setUpdatedBy(userId);
+            requirementV2.setTeamsLeadIds(objectMapper.writeValueAsString(requirementDTO.getTeamsLeadIds()));
+            requirementV2.setStatus(requirementDTO.getStatus());
             requirementRepositoryV2.save(requirementV2);
 
             if (requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
@@ -151,6 +154,8 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirement.setCreatedBy(userId);
         requirement.setUpdatedAt(null);
 
+        requirement.setTeamsLeadIds(objectMapper.writeValueAsString(requirementDTO.getTeamsLeadIds()));
+
         RequirementV2 save = requirementRepositoryV2.save(requirement);
 
         if (save != null && requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
@@ -185,7 +190,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
     }
 
     @Override
-    public ApiResponse getRequirement(String jobId) {
+    public ApiResponse getRequirement(String jobId) throws JsonProcessingException {
         ApiResponse apiResponse = new ApiResponse();
         RequirementV2 requirement = requirementRepositoryV2.findById(jobId)
                 .orElseThrow(() -> new GlobalException("No Requirement Found With ID " + jobId));
@@ -222,6 +227,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirementResDTOV2.setAssignedUsers(jobRecruiterDto);
         requirementResDTOV2.setInterviews(requirement.getInterviews());
         requirementResDTOV2.setSubmissions(requirement.getSubmissions());
+        requirementResDTOV2.setTeamsLeadIds(objectMapper.readValue(requirement.getTeamsLeadIds(), Set.class));
 
 
         apiResponse.setSuccess(true);
@@ -264,7 +270,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             if (userDTO.getRoles().contains("SUPERADMIN")) {
                 spec = RequirementSpecificationsV2.allRequirements(keyword, filters);
             } else if (userDTO.getRoles().contains("TEAMLEAD")) {
-                spec = RequirementSpecificationsV2.requirementsAssignedByUser(userId, keyword, filters);
+                spec = RequirementSpecificationsV2.requirementsForTeamLead(userId, keyword, filters);
             } else if (userDTO.getRoles().contains("RECRUITER")) {
                 spec = RequirementSpecificationsV2.requirementsAssignedToUser(userId, keyword, filters);
             } else {

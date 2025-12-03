@@ -4,6 +4,7 @@ import com.dataquadinc.commons.PageResponse;
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
 import com.dataquadinc.service.RequirementServiceV2;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -37,7 +38,7 @@ public class RequirementControllerV2 {
     }
 
     @GetMapping("/get-requirement/{jobId}")
-    public ApiResponse getRequirement(@PathVariable String jobId) {
+    public ApiResponse getRequirement(@PathVariable String jobId) throws JsonProcessingException {
         ApiResponse requirement = requirementServiceV2.getRequirement(jobId);
         return requirement;
     }

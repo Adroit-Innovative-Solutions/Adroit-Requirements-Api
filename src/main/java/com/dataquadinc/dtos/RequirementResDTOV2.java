@@ -40,4 +40,5 @@ public class RequirementResDTOV2 {
     private String interviews;
 
     private List<JobRecruiterDto> assignedUsers;
+    private Set<String> teamsLeadIds;
 }
