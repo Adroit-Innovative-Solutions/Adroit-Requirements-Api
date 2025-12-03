@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CommonDocumentRepository extends JpaRepository<CommonDocument,Long> {
-    CommonDocument findByCommonDocId(String submissionId);
+    CommonDocument findByCommonDocId(String id);
+    void deleteByCommonDocId(String jobId);
 }
