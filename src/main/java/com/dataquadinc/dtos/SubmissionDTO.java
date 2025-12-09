@@ -21,6 +21,7 @@ public class SubmissionDTO {
     private String jobId;
     private String visaType;
     private String billRate;
+    private String payRate;
     private String currentCTC;
     private String expectedCTC;
     private String noticePeriod;

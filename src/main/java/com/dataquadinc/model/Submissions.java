@@ -22,6 +22,7 @@ public class Submissions extends BaseEntity{
     private LocalDate dob;
     private String visaType;
     private String billRate;
+    private String payRate;
     private String noticePeriod;
     private String currentLocation;
     private boolean relocation;
