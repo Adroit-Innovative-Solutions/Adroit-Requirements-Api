@@ -85,6 +85,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             requirementV2.setUpdatedBy(userId);
             requirementV2.setTeamsLeadIds(objectMapper.writeValueAsString(requirementDTO.getTeamsLeadIds()));
             requirementV2.setStatus(requirementDTO.getStatus());
+            requirementV2.setPayRate(requirementDTO.getPayRate());
             requirementRepositoryV2.save(requirementV2);
 
             if (requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
@@ -140,6 +141,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirement.setNoOfPositions(requirementDTO.getNoOfPositions());
         requirement.setVisaType(requirementDTO.getVisaType());
 
+
         // LONGTEXT field
         requirement.setJobDescription(requirementDTO.getJobDescription());
 
@@ -149,6 +151,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         // Assignment info
         requirement.setAssignedById(userId);
         requirement.setAssignedByName(getUserNameFromUserId(userId));
+        requirement.setPayRate(requirementDTO.getPayRate());
 
         // BaseEntity fields (if BaseEntity has createdBy)
         requirement.setCreatedBy(userId);
