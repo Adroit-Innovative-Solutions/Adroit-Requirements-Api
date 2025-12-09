@@ -30,6 +30,7 @@ public class RequirementReqDTOV2 {
     private String assignedById;
     private String assignedByName;
     private String billRate;
+    private String payRate;
     private String remarks;
 
     private String submissions;
