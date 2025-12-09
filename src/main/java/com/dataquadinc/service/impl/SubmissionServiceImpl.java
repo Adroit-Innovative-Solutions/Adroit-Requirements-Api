@@ -115,9 +115,11 @@ public class SubmissionServiceImpl implements SubmissionService {
                 return page;
             }
             if (userDTO.getRoles().contains("TEAMLEAD")) {
-                Set<String> collect = teamResponse.getBody().getEmployees().stream()
+                Set<String> collect = teamResponse.getBody().getRecruiters().stream()
                         .map(r -> r.getUserId())
                         .collect(Collectors.toSet());
+
+                collect.add(userId);
 
                 Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(collect, keyword, pageable)
                         .map(submissionsMapper::toDTO);
