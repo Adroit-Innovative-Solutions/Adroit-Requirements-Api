@@ -26,6 +26,7 @@ public class RequirementV2 extends BaseEntity{
     private String noticePeriod;
     private String qualification;
     private String billRate;
+    private String payRate;
     private int noOfPositions;
     private String visaType;
 

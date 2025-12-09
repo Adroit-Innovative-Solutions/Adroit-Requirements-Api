@@ -303,6 +303,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
                 dto.setStatus(requirement.getStatus());
                 dto.setInterviews(requirement.getInterviews());
                 dto.setSubmissions(requirement.getSubmissions());
+                dto.setPayRate(requirement.getPayRate());
                 
                 List<JobRecruiterDto> assignedUsers = jobRecruiterRepositoryV2.findByRequirementId(requirement.getJobId())
                     .stream()

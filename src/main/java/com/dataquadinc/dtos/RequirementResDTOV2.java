@@ -31,6 +31,7 @@ public class RequirementResDTOV2 {
     private String assignedById;
     private String assignedByName;
     private String billRate;
+    private String payRate;
     private String remarks;
 
     private LocalDateTime createdAt;
