@@ -2,6 +2,7 @@ package com.dataquadinc.service;
 
 
 import com.dataquadinc.dtos.SubmissionDTO;
+import com.dataquadinc.model.Submissions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,4 +25,6 @@ public interface SubmissionService {
     SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume);
 
     String deleteSubmission(String submissionId);
+
+    List<Submissions> getSubmissionsByJobId(String jobId);
 }

@@ -273,5 +273,11 @@ public class SubmissionServiceImpl implements SubmissionService {
         return "Data Deleted";
     }
 
+    @Override
+    public List<Submissions> getSubmissionsByJobId(String jobId) {
+        List<Submissions> byJobId = submissionsRepository.findByJobId(jobId);
+        return byJobId;
+    }
+
 
 }

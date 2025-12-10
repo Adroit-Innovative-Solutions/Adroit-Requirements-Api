@@ -30,6 +30,7 @@ public class Submissions extends BaseEntity{
     private double relevantExperience;
     private String qualification;
     private String employmentType;
+    @Column(name = "confirm_rtr")
     private String confirmRTR;
     @Column(name = "overallFeedback", columnDefinition = "TEXT")
     private String overallFeedback;

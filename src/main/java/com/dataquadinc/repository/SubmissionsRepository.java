@@ -35,8 +35,7 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
                     "LOWER(s.currentLocation) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                     "LOWER(s.qualification) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                     "LOWER(s.employmentType) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                    "LOWER(s.currentCTC) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-                    "LOWER(s.expectedCTC) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                    "LOWER(s.confirmRTR) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                     "LOWER(s.overallFeedback) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                     "LOWER(s.recruiterName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                     "LOWER(s.jobId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -60,4 +59,5 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
             "(:keyword IS NULL OR :keyword = '' OR " + SEARCH_FIELDS + ")")
     Page<Submissions> findAll(@Param("keyword") String keyword, Pageable pageable);
 
+    List<Submissions> findByJobId(String jobId);
 }

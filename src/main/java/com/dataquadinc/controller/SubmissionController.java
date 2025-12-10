@@ -64,6 +64,14 @@ public class SubmissionController {
         SubmissionDTO submission = submissionService.getSubmissionById(submissionId);
         return new ResponseEntity<>(submission, HttpStatus.OK);
     }
+    @GetMapping("/get-submission/by-jobid/{jobId}")
+    public ResponseEntity<List<Submissions>> getSubmissionByIdJobId(@PathVariable String jobId) {
+        List<Submissions> submission = submissionService.getSubmissionsByJobId(jobId);
+        if(submission.isEmpty()||submission==null){
+            throw new ResourceNotFoundException("No Submissions Found For This Job Id");
+        }
+        return new ResponseEntity<>(submission, HttpStatus.OK);
+    }
 
     @GetMapping("/get-submission/{userId}")
     public ResponseEntity<PageResponse<SubmissionDTO>> getSubmissionForAdmin(
