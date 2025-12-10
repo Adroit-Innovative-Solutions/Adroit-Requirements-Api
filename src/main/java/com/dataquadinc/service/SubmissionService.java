@@ -7,12 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public interface SubmissionService {
 
 
-    SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException;
+    SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume,  List<MultipartFile> documents) throws IOException;
 
     SubmissionDTO getSubmissionById(String submissionId);
 

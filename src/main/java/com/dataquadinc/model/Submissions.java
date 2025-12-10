@@ -30,8 +30,7 @@ public class Submissions extends BaseEntity{
     private double relevantExperience;
     private String qualification;
     private String employmentType;
-    private String currentCTC;
-    private String expectedCTC;
+    private String confirmRTR;
     @Column(name = "overallFeedback", columnDefinition = "TEXT")
     private String overallFeedback;
     private String recruiterId;

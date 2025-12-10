@@ -3,6 +3,7 @@ package com.dataquadinc.dtos;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -22,8 +23,7 @@ public class SubmissionDTO {
     private String visaType;
     private String billRate;
     private String payRate;
-    private String currentCTC;
-    private String expectedCTC;
+    private String confirmRTR;
     private String noticePeriod;
     private String currentLocation;
     private double totalExperience;
@@ -35,5 +35,7 @@ public class SubmissionDTO {
     private boolean relocation;
     private String employmentType;
     private String createdAt;
+
+    private Set<String> fileName;
 
 }

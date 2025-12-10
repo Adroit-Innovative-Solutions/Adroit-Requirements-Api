@@ -5,7 +5,9 @@ import com.dataquadinc.exceptions.ResourceNotFoundException;
 import com.dataquadinc.mapper.SubmissionsMapper;
 import com.dataquadinc.model.CommonDocument;
 import com.dataquadinc.model.Submissions;
+import com.dataquadinc.model.SubmissionsMultiDocs;
 import com.dataquadinc.repository.CommonDocumentRepository;
+import com.dataquadinc.repository.SubmissionsMultiDocsRepo;
 import com.dataquadinc.repository.SubmissionsRepository;
 import com.dataquadinc.service.SubmissionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,10 +23,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,12 +43,15 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Autowired
     CommonDocumentRepository commonDocumentRepository;
 
+    @Autowired
+    SubmissionsMultiDocsRepo submissionsMultiDocsRepo;
+
 
     private final String teamUrl = "https://mymulya.com/users/associated-users/";
     private final String userUrl = "https://mymulya.com/users/user/";
 
     @Override
-    public SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume) throws IOException {
+    public SubmissionDTO createSubmission(String userId, SubmissionDTO submissionDTO, MultipartFile resume, List<MultipartFile> documents) throws IOException {
 
         findIsDuplicateSubmission(submissionDTO);
         Submissions submission = new Submissions();
@@ -69,6 +73,26 @@ public class SubmissionServiceImpl implements SubmissionService {
             commonDocument.setUploadedAt(LocalDateTime.now());
             CommonDocument save = commonDocumentRepository.save(commonDocument);
         }
+        if (documents != null && !documents.isEmpty()) {
+            List<SubmissionsMultiDocs> submissionsMultiDocs = documents.stream()
+                    .filter(doc -> doc != null && !doc.isEmpty())
+                    .map(doc -> {
+                        SubmissionsMultiDocs md = new SubmissionsMultiDocs();
+                        md.setSubmissionId(savedSubmission.getSubmissionId());
+                        md.setFileName(doc.getOriginalFilename());
+                        md.setSize(doc.getSize());
+                        try {
+                            md.setData(doc.getBytes());
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                        md.setContentType(doc.getContentType());
+                        md.setUploadedAt(LocalDateTime.now());
+                        return md;
+                    })
+                    .collect(Collectors.toList());
+            submissionsMultiDocsRepo.saveAll(submissionsMultiDocs);
+        }
 
         SubmissionDTO dto = submissionsMapper.toDTO(savedSubmission);
         return dto;
@@ -79,12 +103,20 @@ public class SubmissionServiceImpl implements SubmissionService {
         log.info("Fetching submission by ID: {}", submissionId);
 
         Optional<Submissions> submissionOptional = submissionsRepository.findById(submissionId);
+        List<SubmissionsMultiDocs> bySubmissionId = submissionsMultiDocsRepo.findBySubmissionId(submissionId);
+
+        Set<String> collect=new HashSet<>();
+        if (!bySubmissionId.isEmpty() && bySubmissionId != null) {
+            collect = bySubmissionId.stream().map(a -> a.getFileName()).collect(Collectors.toSet());
+        }
 
         if (submissionOptional.isEmpty()) {
             throw new ResourceNotFoundException("Submission not found with id: " + submissionId);
         }
 
-        return submissionsMapper.toDTO(submissionOptional.get());
+        SubmissionDTO dto = submissionsMapper.toDTO(submissionOptional.get());
+        dto.setFileName(collect);
+        return dto;
     }
 
     @Override
@@ -170,7 +202,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         Submissions submissions = submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
         if (submissions != null && submissions.getCandidateEmail() != null) {
-            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID " + submissions.getJobId() + "Submitted By " + submissions.getRecruiterId());
+            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID " + submissions.getJobId() + " Submitted By " + submissions.getRecruiterId());
         }
     }
 
@@ -189,8 +221,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         existing.setJobId(submissionDTO.getJobId());
         existing.setVisaType(submissionDTO.getVisaType());
         existing.setBillRate(submissionDTO.getBillRate());
-        existing.setCurrentCTC(submissionDTO.getCurrentCTC());
-        existing.setExpectedCTC(submissionDTO.getExpectedCTC());
+        existing.setConfirmRTR(submissionDTO.getConfirmRTR());
         existing.setNoticePeriod(submissionDTO.getNoticePeriod());
         existing.setCurrentLocation(submissionDTO.getCurrentLocation());
         existing.setTotalExperience(submissionDTO.getTotalExperience());
