@@ -60,4 +60,7 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
     Page<Submissions> findAll(@Param("keyword") String keyword, Pageable pageable);
 
     List<Submissions> findByJobId(String jobId);
+
+    Long countByJobId(String jobId);
+
 }

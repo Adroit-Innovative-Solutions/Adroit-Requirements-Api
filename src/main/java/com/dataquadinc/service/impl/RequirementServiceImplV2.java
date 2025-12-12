@@ -10,6 +10,7 @@ import com.dataquadinc.model.RequirementV2;
 import com.dataquadinc.repository.CommonDocumentRepository;
 import com.dataquadinc.repository.JobRecruiterRepositoryV2;
 import com.dataquadinc.repository.RequirementRepositoryV2;
+import com.dataquadinc.repository.SubmissionsRepository;
 import com.dataquadinc.service.RequirementServiceV2;
 import com.dataquadinc.utils.RequirementSpecificationsV2;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,6 +58,12 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SubmissionsRepository submissionsRepository;
+
+//    @Autowired
+//    private Intervi
 
 
     @Override
@@ -307,7 +314,11 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
                 dto.setInterviews(requirement.getInterviews());
                 dto.setSubmissions(requirement.getSubmissions());
                 dto.setPayRate(requirement.getPayRate());
-                
+
+                Long countByJobId = submissionsRepository.countByJobId(requirement.getJobId());
+                if(countByJobId != null) dto.setSubmissions(String.valueOf(countByJobId.intValue()));
+                else dto.setSubmissions(String.valueOf(0));
+
                 List<JobRecruiterDto> assignedUsers = jobRecruiterRepositoryV2.findByRequirementId(requirement.getJobId())
                     .stream()
                     .map(jr -> {
