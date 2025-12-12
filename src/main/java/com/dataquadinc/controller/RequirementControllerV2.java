@@ -3,6 +3,8 @@ package com.dataquadinc.controller;
 import com.dataquadinc.commons.PageResponse;
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
+import com.dataquadinc.model.CommonDocument;
+import com.dataquadinc.repository.CommonDocumentRepository;
 import com.dataquadinc.service.RequirementServiceV2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +30,8 @@ public class RequirementControllerV2 {
 
     @Autowired
     RequirementServiceV2 requirementServiceV2;
+    @Autowired
+    private CommonDocumentRepository commonDocumentRepository;
 
     @PostMapping("/post-requirement/{userId}")
     public ApiResponse postRequirement(
@@ -67,7 +73,25 @@ public class RequirementControllerV2 {
 
     @GetMapping("/download-jd/{jobId}")
     public ResponseEntity<ByteArrayResource> downloadJobDescription(@PathVariable String jobId) {
-        return requirementServiceV2.downloadJobDescription(jobId);
+        CommonDocument commonDocument = commonDocumentRepository.findByCommonDocId(jobId);
+        if (commonDocument == null) {
+            log.error("Job Description not found for Job ID {}", jobId);
+            throw new RuntimeException("Job description file not found for Job ID: " + jobId);
+        }
+
+        try {
+            ByteArrayResource resource = new ByteArrayResource(commonDocument.getData());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(commonDocument.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + commonDocument.getFileName() + "\"")
+                    .contentLength(commonDocument.getSize())
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error downloading job description for Job ID {}: {}", jobId, e.getMessage());
+            throw new RuntimeException("Error downloading job description: " + e.getMessage());
+        }
     }
 
     @PutMapping("/update-requirement/{userId}")

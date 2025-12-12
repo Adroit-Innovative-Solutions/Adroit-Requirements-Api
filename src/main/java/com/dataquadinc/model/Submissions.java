@@ -37,4 +37,7 @@ public class Submissions extends BaseEntity{
     private String recruiterId;
     private String recruiterName;
     private String jobId;
+    private String status;
+    private boolean bench=false;
+    private boolean placements=false;
 }
