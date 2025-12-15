@@ -37,7 +37,6 @@ public abstract class BaseEntity {
     @PrePersist
     protected void onCreate(){
        this.createdAt=LocalDateTime.now();
-       this.updatedAt=LocalDateTime.now();
        this.isDeleted=false;
     }
     @PreUpdate

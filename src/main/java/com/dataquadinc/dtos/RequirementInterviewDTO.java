@@ -1,66 +1,42 @@
-package com.dataquadinc.model;
+package com.dataquadinc.dtos;
 
-import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
+
 import java.time.OffsetDateTime;
 
-@Entity
-@Table(name = "requirement_interview")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RequirementInterview extends BaseEntity {
+public class RequirementInterviewDTO {
 
-    @Id
     private String interviewId;
-
     private String candidateName;
     private String candidateEmail;
     private String candidateMobileNumber;
-
     private String clientId;
     private String clientName;
     private String clientEmail;
-
     private String userId;
     private String userName;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING,
-            pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    @Column(name = "interview_date_time")
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private OffsetDateTime interviewDateTime;
-
+    
     private Integer duration;
     private String zoomLink;
-
     private String externalInterviewDetails;
-
     private String interviewLevel;
     private String interviewStatus;
-
     private String recruiterId;
     private String recruiterName;
-
     private boolean isPlaced;
-
     private String internalFeedback;
     private String comments;
-
     private String requirementId;
     private String submissionId;
-
-    @PrePersist
-    protected void onCreate(){
-        super.onCreate();
-        this.interviewStatus="SCHEDULED";
-    }
-
-    @PreUpdate
-    protected void onUpdate(){
-        super.onUpdate();
-    }
+    private String createdAt;
+    private String updatedAt;
 }
-
