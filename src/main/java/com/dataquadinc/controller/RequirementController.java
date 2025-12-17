@@ -87,7 +87,7 @@ public class RequirementController {
             @RequestParam(required = false) Map<String,Object> filters
     ){
         log.info("Incoming Request For fetching All Requirement");
-        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
 
         Page<RequirementDTO> response=requirementService.allRequirements(keyword,filters,pageable);
         PageResponse<RequirementDTO> apiResponse=new PageResponse<>(response);
@@ -161,7 +161,7 @@ public class RequirementController {
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters
     ){
-        Pageable pageable=PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Pageable pageable=PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
         Page<RequirementDTO> requirementDTOPage;
         if(asAssignee)  {
             // Jobs Assigned To User
