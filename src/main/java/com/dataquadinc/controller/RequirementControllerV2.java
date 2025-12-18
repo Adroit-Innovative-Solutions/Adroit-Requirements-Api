@@ -56,11 +56,18 @@ public class RequirementControllerV2 {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "fromDate", required = false) String fromDate,
+            @RequestParam(value = "toDate", required = false) String toDate,
             @RequestParam Map<String, Object> filters) {
         
         filters.remove("keyword");
         filters.remove("page");
         filters.remove("size");
+        filters.remove("fromDate");
+        filters.remove("toDate");
+        
+        if (fromDate != null) filters.put("fromDate", fromDate);
+        if (toDate != null) filters.put("toDate", toDate);
         
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC,"createdAt");
         return requirementServiceV2.getRequirementByUserId(userId, keyword, pageable, filters);

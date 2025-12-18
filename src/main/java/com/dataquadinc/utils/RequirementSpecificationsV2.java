@@ -9,7 +9,9 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ public class RequirementSpecificationsV2 {
             "jobMode", "experienceRequired", "noticePeriod", "relevantExperience",
             "qualification", "salaryPackage", "noOfPositions", "visaType","clientId",
             "jobDescription", "status", "assignedById", "createdAt", "assignedByName","updatedAt",
-            "createdBy", "updatedBy"
+            "createdBy", "updatedBy", "fromDate", "toDate"
     );
 
     public static Specification<RequirementV2> createSearchSpecification(String keyword) {
@@ -104,6 +106,28 @@ public class RequirementSpecificationsV2 {
                                     try {
                                         LocalDateTime dateTime = LocalDateTime.parse(value.toString());
                                         predicates.add(criteriaBuilder.equal(root.get(field), dateTime));
+                                    } catch (DateTimeParseException e) {
+                                        // Optionally log or ignore invalid format
+                                    }
+                                }
+                                break;
+                            case "fromDate":
+                                if (value instanceof String && !value.toString().isBlank()) {
+                                    try {
+                                        LocalDate fromDate = LocalDate.parse(value.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                                        LocalDateTime fromDateTime = fromDate.atStartOfDay();
+                                        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
+                                    } catch (DateTimeParseException e) {
+                                        // Optionally log or ignore invalid format
+                                    }
+                                }
+                                break;
+                            case "toDate":
+                                if (value instanceof String && !value.toString().isBlank()) {
+                                    try {
+                                        LocalDate toDate = LocalDate.parse(value.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                                        LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
+                                        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
                                     } catch (DateTimeParseException e) {
                                         // Optionally log or ignore invalid format
                                     }

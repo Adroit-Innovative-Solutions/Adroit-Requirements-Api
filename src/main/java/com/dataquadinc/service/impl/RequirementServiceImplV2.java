@@ -70,6 +70,10 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
     @Transactional
     public ApiResponse save(String userId, RequirementReqDTOV2 requirementDTO, MultipartFile jobDescriptionFile) throws IOException {
 
+        if(requirementDTO.getBillRate()==null||requirementDTO.getPayRate()==null||requirementDTO.getVisaType()==null){
+            throw new GlobalException("Required the BIllRate and PayRate, VisaType");
+        }
+
         if(requirementDTO.getJobId()!=null){
             RequirementV2 requirementV2 = requirementRepositoryV2.findById(requirementDTO.getJobId()).orElseThrow(() -> new GlobalException("Requirement not found"));
             requirementV2.setJobTitle(requirementDTO.getJobTitle());
