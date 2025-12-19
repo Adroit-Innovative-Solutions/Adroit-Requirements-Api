@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -42,22 +43,35 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
                     "CAST(s.totalExperience AS string) LIKE CONCAT('%', :keyword, '%') OR " +
                     "CAST(s.relevantExperience AS string) LIKE CONCAT('%', :keyword, '%')";
 
-    // Unified search queries
+    // Updated queries with proper date range and keyword precedence
     @Query("SELECT s FROM Submissions s WHERE s.recruiterId = :recruiterId AND " +
-            "(:keyword IS NULL OR :keyword = '' OR " + SEARCH_FIELDS + ")")
+            "(:fromDate IS NULL OR s.createdAt >= :fromDate) AND " +
+            "(:toDate IS NULL OR s.createdAt <= :toDate) AND " +
+            "(:keyword IS NULL OR :keyword = '' OR (" + SEARCH_FIELDS + "))")
     Page<Submissions> findByRecruiterId(@Param("recruiterId") String recruiterId,
-                                                  @Param("keyword") String keyword,
-                                                  Pageable pageable);
+                                        @Param("keyword") String keyword,
+                                        @Param("fromDate") LocalDateTime fromDate,
+                                        @Param("toDate") LocalDateTime toDate,
+                                        Pageable pageable);
 
     @Query("SELECT s FROM Submissions s WHERE s.recruiterId IN :recruiterIds AND " +
-            "(:keyword IS NULL OR :keyword = '' OR " + SEARCH_FIELDS + ")")
+            "(:fromDate IS NULL OR s.createdAt >= :fromDate) AND " +
+            "(:toDate IS NULL OR s.createdAt <= :toDate) AND " +
+            "(:keyword IS NULL OR :keyword = '' OR (" + SEARCH_FIELDS + "))")
     Page<Submissions> findByRecruiterIdIn(@Param("recruiterIds") Set<String> recruiterIds,
-                                                    @Param("keyword") String keyword,
-                                                    Pageable pageable);
+                                          @Param("keyword") String keyword,
+                                          @Param("fromDate") LocalDateTime fromDate,
+                                          @Param("toDate") LocalDateTime toDate,
+                                          Pageable pageable);
 
     @Query("SELECT s FROM Submissions s WHERE " +
-            "(:keyword IS NULL OR :keyword = '' OR " + SEARCH_FIELDS + ")")
-    Page<Submissions> findAll(@Param("keyword") String keyword, Pageable pageable);
+            "(:fromDate IS NULL OR s.createdAt >= :fromDate) AND " +
+            "(:toDate IS NULL OR s.createdAt <= :toDate) AND " +
+            "(:keyword IS NULL OR :keyword = '' OR (" + SEARCH_FIELDS + "))")
+    Page<Submissions> findAll(@Param("keyword") String keyword,
+                              @Param("fromDate") LocalDateTime fromDate,
+                              @Param("toDate") LocalDateTime toDate,
+                              Pageable pageable);
 
     List<Submissions> findByJobId(String jobId);
 

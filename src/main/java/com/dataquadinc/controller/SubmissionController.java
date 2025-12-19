@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,7 +80,22 @@ public class SubmissionController {
             @RequestParam(defaultValue ="0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
             @RequestParam(required = false) Map<String,Object> filters) {
+
+        // Initialize filters map if null
+        if (filters == null) {
+            filters = new HashMap<>();
+        }
+
+        // Add date filters
+        if (fromDate != null && !fromDate.isEmpty()) {
+            filters.put("fromDate", fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            filters.put("toDate", toDate);
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
 
