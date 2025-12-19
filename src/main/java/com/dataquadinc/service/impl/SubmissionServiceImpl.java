@@ -24,7 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -138,8 +140,20 @@ public class SubmissionServiceImpl implements SubmissionService {
 
             UserDTO userDTO = mapper.convertValue(userResponse.getBody().getData(), UserDTO.class);
 
+            // Parse date filters
+            LocalDateTime fromDate = parseDateFilter(filters, "fromDate", true);
+            LocalDateTime toDate = parseDateFilter(filters, "toDate", false);
+
+            // Handle single-date queries
+            if (fromDate != null && toDate == null) {
+                toDate = fromDate.withHour(23).withMinute(59).withSecond(59);
+            }
+            if (toDate != null && fromDate == null) {
+                fromDate = toDate.withHour(0).withMinute(0).withSecond(0);
+            }
+
             if (userDTO.getRoles().contains("SUPERADMIN")) {
-                Page<SubmissionDTO> page = submissionsRepository.findAll(keyword, pageable)
+                Page<SubmissionDTO> page = submissionsRepository.findAll(keyword, fromDate, toDate, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
@@ -153,7 +167,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
                 collect.add(userId);
 
-                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(collect, keyword, pageable)
+                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(collect, keyword, fromDate, toDate, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
@@ -161,7 +175,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 return page;
             }
             if (userDTO.getRoles().contains("RECRUITER")) {
-                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, pageable)
+                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, fromDate, toDate, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
@@ -177,9 +191,47 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
     }
 
+    // Helper method to parse date filters
+    private LocalDateTime parseDateFilter(Map<String, Object> filters, String key, boolean isStartOfDay) {
+        if (filters == null || filters.get(key) == null) {
+            return null;
+        }
+
+        String dateString = filters.get(key).toString().trim();
+        List<DateTimeFormatter> formatters = List.of(
+                DateTimeFormatter.ISO_LOCAL_DATE,            // yyyy-MM-dd
+                DateTimeFormatter.ofPattern("dd-MM-yyyy")    // dd-MM-yyyy
+        );
+
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                LocalDate date = LocalDate.parse(dateString, formatter);
+                return isStartOfDay ? date.atStartOfDay() : date.atTime(23, 59, 59);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // If parsing fails for all formats
+        System.out.println("Error parsing date filter: " + key + " = " + dateString);
+        return null;
+    }
+
+
     @Override
     public Page<SubmissionDTO> getSubmissionByTeamLead(String userId, String keyword, Map<String,Object> filters, Pageable pageable) {
-        Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, pageable)
+        // Parse date filters
+        LocalDateTime fromDate = parseDateFilter(filters, "fromDate", true);
+        LocalDateTime toDate = parseDateFilter(filters, "toDate", false);
+
+        // Handle single-date queries
+        if (fromDate != null && toDate == null) {
+            toDate = fromDate.withHour(23).withMinute(59).withSecond(59);
+        }
+        if (toDate != null && fromDate == null) {
+            fromDate = toDate.withHour(0).withMinute(0).withSecond(0);
+        }
+
+        Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, fromDate, toDate, pageable)
                 .map(submissionsMapper::toDTO);
         if (page.getContent().isEmpty()) {
             throw new ResourceNotFoundException("No Data Found");
