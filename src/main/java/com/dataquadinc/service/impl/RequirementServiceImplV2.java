@@ -231,6 +231,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirementResDTOV2.setAssignedById(requirement.getAssignedById());
         requirementResDTOV2.setAssignedByName(requirement.getAssignedByName());
         requirementResDTOV2.setStatus(requirement.getStatus());
+        requirementResDTOV2.setPayRate(requirement.getPayRate());
         List<JobRecruiterDto> jobRecruiterDto = new ArrayList<JobRecruiterDto>();
         List<JobRecruiterV2> byRequirementId = jobRecruiterRepositoryV2.findByRequirementId(jobId);
         byRequirementId.forEach(jobRecruiter -> {
