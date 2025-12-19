@@ -23,6 +23,7 @@ public class RequirementV2 extends BaseEntity{
     private String location;
     private String jobMode;
     private String experienceRequired;
+    private String relevantExperience;
     private String noticePeriod;
     private String qualification;
     private String billRate;
