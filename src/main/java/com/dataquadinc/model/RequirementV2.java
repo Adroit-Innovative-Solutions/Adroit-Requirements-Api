@@ -30,6 +30,8 @@ public class RequirementV2 extends BaseEntity{
     private String payRate;
     private int noOfPositions;
     private String visaType;
+    private String RequiredSkills;
+
 
     @Column(columnDefinition = "LONGTEXT")
     private String jobDescription;

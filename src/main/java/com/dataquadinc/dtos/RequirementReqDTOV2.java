@@ -32,6 +32,7 @@ public class RequirementReqDTOV2 {
     private String billRate;
     private String payRate;
     private String remarks;
+    private String RequiredSkills;
 
     private String submissions;
     private String interviews;

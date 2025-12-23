@@ -97,6 +97,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             requirementV2.setTeamsLeadIds(objectMapper.writeValueAsString(requirementDTO.getTeamsLeadIds()));
             requirementV2.setStatus(requirementDTO.getStatus());
             requirementV2.setPayRate(requirementDTO.getPayRate());
+            requirementV2.setRequiredSkills(requirementDTO.getRequiredSkills());
             requirementRepositoryV2.save(requirementV2);
 
             if (requirementDTO.getAssignedUsers() != null && requirementDTO.getAssignedUsers().size() > 0) {
@@ -151,7 +152,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirement.setQualification(requirementDTO.getQualification());
         requirement.setNoOfPositions(requirementDTO.getNoOfPositions());
         requirement.setVisaType(requirementDTO.getVisaType());
-
+        requirement.setRequiredSkills(requirementDTO.getRequiredSkills());
 
         // LONGTEXT field
         requirement.setJobDescription(requirementDTO.getJobDescription());
@@ -230,6 +231,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirementResDTOV2.setUpdatedAt(requirement.getUpdatedAt());
         requirementResDTOV2.setAssignedById(requirement.getAssignedById());
         requirementResDTOV2.setAssignedByName(requirement.getAssignedByName());
+        requirementResDTOV2.setRequiredSkills(requirement.getRequiredSkills());
         requirementResDTOV2.setStatus(requirement.getStatus());
         requirementResDTOV2.setPayRate(requirement.getPayRate());
         List<JobRecruiterDto> jobRecruiterDto = new ArrayList<JobRecruiterDto>();
@@ -321,6 +323,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
                 dto.setInterviews(requirement.getInterviews());
                 dto.setSubmissions(requirement.getSubmissions());
                 dto.setPayRate(requirement.getPayRate());
+                dto.setRequiredSkills(requirement.getRequiredSkills());
 
                 Long countByJobId = submissionsRepository.countByJobId(requirement.getJobId());
                 if(countByJobId != null) dto.setSubmissions(String.valueOf(countByJobId.intValue()));

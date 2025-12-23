@@ -42,4 +42,6 @@ public class RequirementResDTOV2 {
 
     private List<JobRecruiterDto> assignedUsers;
     private Set<String> teamsLeadIds;
+    private String requiredSkills;
+
 }
