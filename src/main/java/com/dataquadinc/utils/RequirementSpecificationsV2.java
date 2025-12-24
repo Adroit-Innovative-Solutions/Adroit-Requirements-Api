@@ -69,8 +69,58 @@ public class RequirementSpecificationsV2 {
             }
 
             List<Predicate> predicates=new ArrayList<>();
+            // ================== DATE RANGE LOGIC (ADD HERE) ==================
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+            String fromDateStr = (String) filters.get("fromDate");
+            String toDateStr   = (String) filters.get("toDate");
+
+            try {
+                if (fromDateStr != null && toDateStr != null) {
+                    // RANGE
+                    LocalDate fromDate = LocalDate.parse(fromDateStr, formatter);
+                    LocalDate toDate = LocalDate.parse(toDateStr, formatter);
+
+                    predicates.add(
+                            criteriaBuilder.between(
+                                    root.get("createdAt"),
+                                    fromDate.atStartOfDay(),
+                                    toDate.atTime(23, 59, 59)
+                            )
+                    );
+                } else if (fromDateStr != null) {
+                    // SINGLE DAY (fromDate)
+                    LocalDate date = LocalDate.parse(fromDateStr, formatter);
+
+                    predicates.add(
+                            criteriaBuilder.between(
+                                    root.get("createdAt"),
+                                    date.atStartOfDay(),
+                                    date.atTime(23, 59, 59)
+                            )
+                    );
+                } else if (toDateStr != null) {
+                    // SINGLE DAY (toDate)
+                    LocalDate date = LocalDate.parse(toDateStr, formatter);
+
+                    predicates.add(
+                            criteriaBuilder.between(
+                                    root.get("createdAt"),
+                                    date.atStartOfDay(),
+                                    date.atTime(23, 59, 59)
+                            )
+                    );
+                }
+            } catch (DateTimeParseException e) {
+                // Optional: log invalid date format
+            }
+            // ================== END DATE LOGIC ==================
+
+            // ================== OTHER FILTERS ==================
                filters.forEach((field,value)->{
-                    if(value!=null && ALLOWED_FIELDS.contains(field)){
+                    if(value!=null && ALLOWED_FIELDS.contains(field)
+                    && !field.equals("fromDate")
+                           && !field.equals("toDate")){
                         switch (field){
                             case "jobId":
                             case "jobTitle":
@@ -111,28 +161,6 @@ public class RequirementSpecificationsV2 {
                                     }
                                 }
                                 break;
-                            case "fromDate":
-                                if (value instanceof String && !value.toString().isBlank()) {
-                                    try {
-                                        LocalDate fromDate = LocalDate.parse(value.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                                        LocalDateTime fromDateTime = fromDate.atStartOfDay();
-                                        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
-                                    } catch (DateTimeParseException e) {
-                                        // Optionally log or ignore invalid format
-                                    }
-                                }
-                                break;
-                            case "toDate":
-                                if (value instanceof String && !value.toString().isBlank()) {
-                                    try {
-                                        LocalDate toDate = LocalDate.parse(value.toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                                        LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
-                                        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
-                                    } catch (DateTimeParseException e) {
-                                        // Optionally log or ignore invalid format
-                                    }
-                                }
-                                break;
                         }
                     }
                });
@@ -166,11 +194,11 @@ public class RequirementSpecificationsV2 {
                     var jobRecruiterRoot = subquery.from(JobRecruiterV2.class);
                     subquery.select(jobRecruiterRoot.get("requirementId"))
                            .where(criteriaBuilder.equal(jobRecruiterRoot.get("userId"), userId));
-                    
+
                     // Combine subquery with direct assignedById check
                     Predicate assignedToUser = criteriaBuilder.in(root.get("jobId")).value(subquery);
                     Predicate assignedByUser = criteriaBuilder.equal(root.get("assignedById"), userId);
-                    
+
                     return criteriaBuilder.or(assignedToUser, assignedByUser);
                 }))
                 .and(createSearchSpecification(keyword))
