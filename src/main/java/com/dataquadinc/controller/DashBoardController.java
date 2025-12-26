@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
         "http://182.18.177.16","http://192.168.0.139:3000"})
 @Slf4j
 @RestController
-@RequestMapping(SystemConstants.API_BASE_PATH+"/dashboard")
+@RequestMapping(SystemConstants.API_BASE_PATH+"/dash")
 public class DashBoardController {
 
     @Autowired
