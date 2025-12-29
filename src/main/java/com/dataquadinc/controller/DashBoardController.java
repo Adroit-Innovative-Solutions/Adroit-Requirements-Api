@@ -23,7 +23,7 @@ public class DashBoardController {
     @Autowired
     DashBoardServiceImpl dashBoardService;
 
-    @GetMapping("/get-all")
+    @GetMapping("/dashboard/get-all")
     public ResponseEntity<DashBoardData> getDashBoradData(){
         DashBoardData dashBoardData = dashBoardService.getDashboardData();
         return new ResponseEntity<> (dashBoardData, HttpStatus.FOUND);
