@@ -14,52 +14,66 @@ public class DashBoardServiceImpl {
     }
 
     public DashBoardData getDashboardData() {
+
         String sql = """
             SELECT
-              (SELECT COUNT(*)
-               FROM consultant
-               WHERE moved_to_hotlist = 1
-                 AND status = 'ACTIVE'
-                 AND is_deleted = 0) AS total_consultants,
+                (
+                    SELECT COUNT(*)
+                    FROM production.consultant
+                    WHERE moved_to_hotlist = 1
+                      AND status = 'ACTIVE'
+                      AND is_deleted = 0
+                      AND payroll <> 'FULL-TIME'
+                ) AS totalHotlistExceptFullTime,
 
-              (SELECT COUNT(*)
-               FROM consultant
-               WHERE moved_to_hotlist = 0
-                 AND status = 'ACTIVE'
-                 AND is_deleted = 0) AS bench_consultants,
+                (
+                    SELECT COUNT(*)
+                    FROM production.consultant
+                    WHERE moved_to_hotlist = 1
+                      AND status = 'ACTIVE'
+                      AND is_deleted = 0
+                      AND payroll = 'W2'
+                ) AS w2HotlistCount,
 
-              (SELECT COUNT(*)
-               FROM interviews_us
-               WHERE is_deleted = 0) AS total_interviews,
+                (
+                    SELECT COUNT(*)
+                    FROM production.rtr_us
+                    WHERE is_deleted = 0
+                      AND created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                      AND created_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+                ) AS rtrMonthlyCount,
 
-              (SELECT COUNT(*)
-               FROM interviews_us
-               WHERE is_deleted = 0
-                 AND MONTH(created_at) = MONTH(CURRENT_DATE)
-                 AND YEAR(created_at) = YEAR(CURRENT_DATE)
-              ) AS this_month_interviews,
+                (
+                    SELECT COUNT(*)
+                    FROM production.interviews_us
+                    WHERE is_deleted = 0
+                      AND created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                      AND created_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+                ) AS currentMonthInterview,
 
-              (SELECT COUNT(*)
-               FROM submissions_us
-               WHERE MONTH(created_at) = MONTH(CURRENT_DATE)
-                 AND YEAR(created_at) = YEAR(CURRENT_DATE)
-              ) AS this_month_submissions,
+                (
+                    SELECT COUNT(*)
+                    FROM production.requirements_us_v2
+                    WHERE created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                      AND created_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+                ) AS currentMonthRequirements,
 
-              (SELECT COUNT(*)
-               FROM requirements_us_v2
-               WHERE MONTH(created_at) = MONTH(CURRENT_DATE)
-                 AND YEAR(created_at) = YEAR(CURRENT_DATE)
-              ) AS this_month_requirements
-        """;
+                (
+                    SELECT COUNT(*)
+                    FROM production.submissions_us
+                    WHERE created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                      AND created_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+                ) AS currentMonthSubmissions
+            """;
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
                 DashBoardData.builder()
-                        .totalConsultants(rs.getString("total_consultants"))
-                        .benchConsultants(rs.getString("bench_consultants"))
-                        .totalInterviews(rs.getString("total_interviews"))
-                        .currentMonthInterview(rs.getString("this_month_interviews"))
-                        .currentMonthSubmissions(rs.getString("this_month_submissions"))
-                        .currentMonthRequirements(rs.getString("this_month_requirements"))
+                        .totalHotlistExceptFullTime(rs.getString("totalHotlistExceptFullTime"))
+                        .w2HotlistCount(rs.getString("w2HotlistCount"))
+                        .rtrMonthlyCount(rs.getString("rtrMonthlyCount"))
+                        .currentMonthInterview(rs.getString("currentMonthInterview"))
+                        .currentMonthRequirements(rs.getString("currentMonthRequirements"))
+                        .currentMonthSubmissions(rs.getString("currentMonthSubmissions"))
                         .build()
         );
     }

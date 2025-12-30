@@ -10,15 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashBoardData {
-    private String totalConsultants;
-    private String benchConsultants;
 
+    private String totalHotlistExceptFullTime;
+    private String w2HotlistCount;
+    private String rtrMonthlyCount;
     private String currentMonthInterview;
-    private String totalInterviews;
 
     private String currentMonthRequirements;
     private String currentMonthSubmissions;
-
-//    private String currentMonthJoiningDateForConsultant;
-//    private String currentMonthPlacements;
+    private String totalPlacementsCurrentMonth;
+    private String totalPlacementsOverall;
 }
