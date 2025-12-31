@@ -285,7 +285,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             
             Specification<RequirementV2> spec;
             
-            if (userDTO.getRoles().contains("SUPERADMIN")) {
+            if (userDTO.getRoles().contains("SUPERADMIN")||userDTO.getRoles().contains("GRANDSALES")) {
                 spec = RequirementSpecificationsV2.allRequirements(keyword, filters);
             } else if (userDTO.getRoles().contains("TEAMLEAD")) {
                 spec = RequirementSpecificationsV2.requirementsForTeamLead(userId, keyword, filters);
