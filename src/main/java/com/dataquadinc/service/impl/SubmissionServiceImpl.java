@@ -251,10 +251,10 @@ public class SubmissionServiceImpl implements SubmissionService {
 
 
     public void findIsDuplicateSubmission(SubmissionDTO submissionDTO) {
-
-        Submissions submissions = submissionsRepository.findByCandidateEmail(submissionDTO.getCandidateEmail());
-        if (submissions != null && submissions.getCandidateEmail() != null) {
-            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID " + submissions.getJobId() + " Submitted By " + submissions.getRecruiterId());
+        List<Submissions> submissions = submissionsRepository.findAllByCandidateEmailAndJobId(submissionDTO.getCandidateEmail(), submissionDTO.getJobId());
+        if (!submissions.isEmpty()) {
+            Submissions existing = submissions.get(0);
+            throw new ResourceNotFoundException("Candidate Already Submitted For Job ID " + existing.getJobId() + " Submitted By " + existing.getRecruiterId());
         }
     }
 
