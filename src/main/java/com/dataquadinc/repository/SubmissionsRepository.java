@@ -19,6 +19,8 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
 
     Submissions findByCandidateEmailAndJobId(String candidateEmail, String jobId);
 
+    List<Submissions> findAllByCandidateEmailAndJobId(String candidateEmail, String jobId);
+
     List<Submissions> findByRecruiterId(String recruiterId);
     List<Submissions> findByRecruiterIdIn(Set<String> recruiterIds);
     Submissions findByCandidateEmail(String candidateEmail);
