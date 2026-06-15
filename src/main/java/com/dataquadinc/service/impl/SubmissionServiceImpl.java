@@ -50,6 +50,7 @@ public class SubmissionServiceImpl implements SubmissionService {
 
 
     private final String teamUrl = "https://mymulya.com/users/associated-users/";
+    private final String allTeamsUrl = "https://mymulya.com/users/AllAssociatedUsers";
     private final String userUrl = "https://mymulya.com/users/user/";
 
     @Override
@@ -189,6 +190,70 @@ public class SubmissionServiceImpl implements SubmissionService {
             e.printStackTrace();
             throw new ResourceNotFoundException("Exception occurs while calling external api`s.");
         }
+    }
+
+    @Override
+    public Page<SubmissionDTO> getSubmissionForCoordinator(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+        try {
+            LocalDateTime fromDate = parseDateFilter(filters, "fromDate", true);
+            LocalDateTime toDate = parseDateFilter(filters, "toDate", false);
+
+            if (fromDate != null && toDate == null) {
+                toDate = fromDate.withHour(23).withMinute(59).withSecond(59);
+            }
+            if (toDate != null && fromDate == null) {
+                fromDate = toDate.withHour(0).withMinute(0).withSecond(0);
+            }
+
+            ResponseEntity<TeamDTO[]> teamsResponse = restTemplate.getForEntity(allTeamsUrl, TeamDTO[].class);
+            TeamDTO[] teams = teamsResponse.getBody();
+
+            if (teams == null || teams.length == 0) {
+                throw new ResourceNotFoundException("User Don`t have any submissions");
+            }
+
+            Set<String> teamMemberIds = Arrays.stream(teams)
+                    .filter(team -> team.getCoordinators() != null && team.getCoordinators().stream()
+                            .anyMatch(coordinator -> userId.equals(coordinator.getUserId())))
+                    .flatMap(team -> {
+                        Set<String> ids = new HashSet<>();
+                        if (team.getTeamLeadId() != null && !team.getTeamLeadId().isBlank()) {
+                            ids.add(team.getTeamLeadId());
+                        }
+                        ids.addAll(extractUserIds(team.getRecruiters()));
+                        ids.addAll(extractUserIds(team.getEmployees()));
+                        ids.addAll(extractUserIds(team.getSalesExecutives()));
+                        return ids.stream();
+                    })
+                    .collect(Collectors.toSet());
+
+            if (teamMemberIds.isEmpty()) {
+                throw new ResourceNotFoundException("User Don`t have any submissions");
+            }
+
+            Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(teamMemberIds, keyword, fromDate, toDate, pageable)
+                    .map(submissionsMapper::toDTO);
+            if (page.getContent().isEmpty()) {
+                throw new ResourceNotFoundException("User Don`t have any submissions");
+            }
+            return page;
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Exception while fetching coordinator submissions for user {}", userId, e);
+            throw new ResourceNotFoundException("Exception occurs while calling external api`s.");
+        }
+    }
+
+    private Set<String> extractUserIds(List<AssociatedUser> users) {
+        if (users == null) {
+            return Collections.emptySet();
+        }
+        return users.stream()
+                .map(AssociatedUser::getUserId)
+                .filter(Objects::nonNull)
+                .filter(id -> !id.isBlank())
+                .collect(Collectors.toSet());
     }
 
     // Helper method to parse date filters
