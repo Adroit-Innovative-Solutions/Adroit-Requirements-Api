@@ -20,6 +20,8 @@ public interface SubmissionService {
 
     Page<SubmissionDTO> getSubmission(String userId, String keyword, Map<String, Object> filters, Pageable pageable);
 
+    Page<SubmissionDTO> getSubmissionForCoordinator(String userId, String keyword, Map<String, Object> filters, Pageable pageable);
+
     Page<SubmissionDTO> getSubmissionByTeamLead(String userId, String keyword, Map<String, Object> filters, Pageable pageable);
 
     SubmissionDTO updateSubmission(String submissionId, SubmissionDTO submissionDTO, MultipartFile resume);

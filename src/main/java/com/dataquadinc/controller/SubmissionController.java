@@ -82,6 +82,7 @@ public class SubmissionController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
+            @RequestParam(defaultValue = "false") boolean coordinator,
             @RequestParam(required = false) Map<String,Object> filters) {
 
         // Initialize filters map if null
@@ -99,7 +100,9 @@ public class SubmissionController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
 
-        Page<SubmissionDTO> submission = submissionService.getSubmission(userId, keyword, filters, pageable);
+        Page<SubmissionDTO> submission = coordinator
+                ? submissionService.getSubmissionForCoordinator(userId, keyword, filters, pageable)
+                : submissionService.getSubmission(userId, keyword, filters, pageable);
         PageResponse<SubmissionDTO> pageResponse = new PageResponse<>(submission);
         return new ResponseEntity<>(pageResponse, HttpStatus.OK);
     }
