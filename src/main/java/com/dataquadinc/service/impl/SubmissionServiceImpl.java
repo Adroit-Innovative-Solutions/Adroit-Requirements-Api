@@ -220,9 +220,11 @@ public class SubmissionServiceImpl implements SubmissionService {
                         if (team.getTeamLeadId() != null && !team.getTeamLeadId().isBlank()) {
                             ids.add(team.getTeamLeadId());
                         }
+                        ids.addAll(extractUserIds(team.getTeamLeads()));
                         ids.addAll(extractUserIds(team.getRecruiters()));
                         ids.addAll(extractUserIds(team.getEmployees()));
                         ids.addAll(extractUserIds(team.getSalesExecutives()));
+                        ids.addAll(extractUserIds(team.getCoordinators()));
                         return ids.stream();
                     })
                     .collect(Collectors.toSet());
@@ -231,7 +233,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 throw new ResourceNotFoundException("User Don`t have any submissions");
             }
 
-            Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(teamMemberIds, keyword, fromDate, toDate, pageable)
+            Page<SubmissionDTO> page = submissionsRepository.findByCreatedByIn(teamMemberIds, keyword, fromDate, toDate, pageable)
                     .map(submissionsMapper::toDTO);
             if (page.getContent().isEmpty()) {
                 throw new ResourceNotFoundException("User Don`t have any submissions");

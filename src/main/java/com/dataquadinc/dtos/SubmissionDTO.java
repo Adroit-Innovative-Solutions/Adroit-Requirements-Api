@@ -35,6 +35,7 @@ public class SubmissionDTO {
     private boolean relocation;
     private String employmentType;
     private String createdAt;
+    private String createdBy;
 
     private Set<String> fileName;
 
