@@ -66,6 +66,16 @@ public interface SubmissionsRepository extends JpaRepository<Submissions, String
                                           @Param("toDate") LocalDateTime toDate,
                                           Pageable pageable);
 
+    @Query("SELECT s FROM Submissions s WHERE s.createdBy IN :createdByIds AND " +
+            "(:fromDate IS NULL OR s.createdAt >= :fromDate) AND " +
+            "(:toDate IS NULL OR s.createdAt <= :toDate) AND " +
+            "(:keyword IS NULL OR :keyword = '' OR (" + SEARCH_FIELDS + "))")
+    Page<Submissions> findByCreatedByIn(@Param("createdByIds") Set<String> createdByIds,
+                                        @Param("keyword") String keyword,
+                                        @Param("fromDate") LocalDateTime fromDate,
+                                        @Param("toDate") LocalDateTime toDate,
+                                        Pageable pageable);
+
     @Query("SELECT s FROM Submissions s WHERE " +
             "(:fromDate IS NULL OR s.createdAt >= :fromDate) AND " +
             "(:toDate IS NULL OR s.createdAt <= :toDate) AND " +
