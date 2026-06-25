@@ -19,8 +19,14 @@ public interface RequirementServiceV2 {
     
     PageResponse getRequirementByUserId(String userId, String keyword, Pageable pageable, Map<String, Object> filters);
 
+    PageResponse getAllRequirements(String keyword,
+                                    Pageable pageable,
+                                    Map<String, Object> filters);
+
     ResponseEntity<ByteArrayResource> downloadJobDescription(String jobId);
 
     ApiResponse delete(String jobId);
+
+
 
 }

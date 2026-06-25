@@ -387,4 +387,73 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             throw new RuntimeException("Error downloading job description: " + e.getMessage());
         }
     }
+
+    @Override
+    public PageResponse getAllRequirements(String keyword,
+                                           Pageable pageable,
+                                           Map<String, Object> filters) {
+
+        Page<RequirementV2> requirements =
+                requirementRepositoryV2.allRequirements(
+                        keyword,
+                        filters,
+                        pageable);
+
+        Page<RequirementResDTOV2> requirementDTOs = requirements.map(requirement -> {
+
+            RequirementResDTOV2 dto = new RequirementResDTOV2();
+
+            dto.setJobId(requirement.getJobId());
+            dto.setJobTitle(requirement.getJobTitle());
+            dto.setClientId(requirement.getClientId());
+            dto.setClientName(requirement.getClientName());
+            dto.setJobType(requirement.getJobType());
+            dto.setLocation(requirement.getLocation());
+            dto.setJobMode(requirement.getJobMode());
+            dto.setExperienceRequired(requirement.getExperienceRequired());
+            dto.setRelevantExperience(requirement.getRelevantExperience());
+            dto.setNoticePeriod(requirement.getNoticePeriod());
+            dto.setQualification(requirement.getQualification());
+            dto.setNoOfPositions(requirement.getNoOfPositions());
+            dto.setVisaType(requirement.getVisaType());
+            dto.setJobDescription(requirement.getJobDescription());
+            dto.setBillRate(requirement.getBillRate());
+            dto.setPayRate(requirement.getPayRate());
+            dto.setRemarks(requirement.getRemarks());
+            dto.setCreatedAt(requirement.getCreatedAt());
+            dto.setUpdatedAt(requirement.getUpdatedAt());
+            dto.setAssignedById(requirement.getAssignedById());
+            dto.setAssignedByName(requirement.getAssignedByName());
+            dto.setStatus(requirement.getStatus());
+            dto.setInterviews(requirement.getInterviews());
+            dto.setSubmissions(requirement.getSubmissions());
+            dto.setRequiredSkills(requirement.getRequiredSkills());
+
+            Long countByJobId =
+                    submissionsRepository.countByJobId(requirement.getJobId());
+
+            dto.setSubmissions(
+                    countByJobId != null
+                            ? String.valueOf(countByJobId.intValue())
+                            : "0"
+            );
+
+            List<JobRecruiterDto> assignedUsers =
+                    jobRecruiterRepositoryV2.findByRequirementId(requirement.getJobId())
+                            .stream()
+                            .map(jr -> {
+                                JobRecruiterDto jrDto = new JobRecruiterDto();
+                                jrDto.setUserId(jr.getUserId());
+                                jrDto.setUserName(jr.getUserName());
+                                return jrDto;
+                            })
+                            .collect(Collectors.toList());
+
+            dto.setAssignedUsers(assignedUsers);
+
+            return dto;
+        });
+
+        return PageResponse.of(requirementDTOs);
+    }
 }
