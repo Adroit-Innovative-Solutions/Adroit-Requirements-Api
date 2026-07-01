@@ -83,6 +83,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
             requirementV2.setLocation(requirementDTO.getLocation());
             requirementV2.setJobMode(requirementDTO.getJobMode());
             requirementV2.setExperienceRequired(requirementDTO.getExperienceRequired());
+            requirementV2.setRelevantExperience(requirementDTO.getRelevantExperience());
             requirementV2.setNoticePeriod(requirementDTO.getNoticePeriod());
             requirementV2.setQualification(requirementDTO.getQualification());
             requirementV2.setNoOfPositions(requirementDTO.getNoOfPositions());
@@ -148,6 +149,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         requirement.setLocation(requirementDTO.getLocation());
         requirement.setJobMode(requirementDTO.getJobMode());
         requirement.setExperienceRequired(requirementDTO.getExperienceRequired());
+        requirement.setRelevantExperience(requirementDTO.getRelevantExperience());
         requirement.setNoticePeriod(requirementDTO.getNoticePeriod());
         requirement.setQualification(requirementDTO.getQualification());
         requirement.setNoOfPositions(requirementDTO.getNoOfPositions());
