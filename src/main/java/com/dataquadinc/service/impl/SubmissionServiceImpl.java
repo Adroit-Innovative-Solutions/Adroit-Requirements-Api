@@ -21,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import com.dataquadinc.utils.SubmissionSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -154,7 +156,11 @@ public class SubmissionServiceImpl implements SubmissionService {
             }
 
             if (userDTO.getRoles().contains("SUPERADMIN")) {
-                Page<SubmissionDTO> page = submissionsRepository.findAll(keyword, fromDate, toDate, pageable)
+                Specification<Submissions> specification =
+                        SubmissionSpecification.filter(keyword, filters);
+
+                Page<SubmissionDTO> page = submissionsRepository
+                        .findAll(specification, pageable)
                         .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
@@ -168,16 +174,36 @@ public class SubmissionServiceImpl implements SubmissionService {
 
                 collect.add(userId);
 
-                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterIdIn(collect, keyword, fromDate, toDate, pageable)
-                        .map(submissionsMapper::toDTO);
+                Specification<Submissions> specification =
+                        SubmissionSpecification.filter(keyword, filters);
+
+                specification = specification.and(
+                        (root, query, cb) ->
+                                root.get("recruiterId").in(collect)
+                );
+
+                Page<SubmissionDTO> page =
+                        submissionsRepository
+                                .findAll(specification, pageable)
+                                .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
                 }
                 return page;
             }
             if (userDTO.getRoles().contains("RECRUITER")) {
-                Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, fromDate, toDate, pageable)
-                        .map(submissionsMapper::toDTO);
+                Specification<Submissions> specification =
+                        SubmissionSpecification.filter(keyword, filters);
+
+                specification = specification.and(
+                        (root, query, cb) ->
+                                cb.equal(root.get("recruiterId"), userId)
+                );
+
+                Page<SubmissionDTO> page =
+                        submissionsRepository
+                                .findAll(specification, pageable)
+                                .map(submissionsMapper::toDTO);
                 if (page.getContent().isEmpty()) {
                     throw new ResourceNotFoundException("User Don`t have any submissions");
                 }
@@ -233,8 +259,18 @@ public class SubmissionServiceImpl implements SubmissionService {
                 throw new ResourceNotFoundException("User Don`t have any submissions");
             }
 
-            Page<SubmissionDTO> page = submissionsRepository.findByCreatedByIn(teamMemberIds, keyword, fromDate, toDate, pageable)
-                    .map(submissionsMapper::toDTO);
+            Specification<Submissions> specification =
+                    SubmissionSpecification.filter(keyword, filters);
+
+            specification = specification.and(
+                    (root, query, cb) ->
+                            root.get("createdBy").in(teamMemberIds)
+            );
+
+            Page<SubmissionDTO> page =
+                    submissionsRepository
+                            .findAll(specification, pageable)
+                            .map(submissionsMapper::toDTO);
             if (page.getContent().isEmpty()) {
                 throw new ResourceNotFoundException("User Don`t have any submissions");
             }
@@ -297,9 +333,18 @@ public class SubmissionServiceImpl implements SubmissionService {
         if (toDate != null && fromDate == null) {
             fromDate = toDate.withHour(0).withMinute(0).withSecond(0);
         }
+        Specification<Submissions> specification =
+                SubmissionSpecification.filter(keyword, filters);
 
-        Page<SubmissionDTO> page = submissionsRepository.findByRecruiterId(userId, keyword, fromDate, toDate, pageable)
-                .map(submissionsMapper::toDTO);
+        specification = specification.and(
+                (root, query, cb) ->
+                        cb.equal(root.get("recruiterId"), userId)
+        );
+
+        Page<SubmissionDTO> page =
+                submissionsRepository
+                        .findAll(specification, pageable)
+                        .map(submissionsMapper::toDTO);
         if (page.getContent().isEmpty()) {
             throw new ResourceNotFoundException("No Data Found");
         } else {
