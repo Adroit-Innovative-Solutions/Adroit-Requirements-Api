@@ -24,9 +24,11 @@ public class RequirementSpecificationsV2 {
     private static final Set<String> ALLOWED_FIELDS = Set.of(
             "jobId", "jobTitle", "clientName", "jobType", "location",
             "jobMode", "experienceRequired", "noticePeriod", "relevantExperience",
-            "qualification", "salaryPackage", "noOfPositions", "visaType","clientId",
-            "jobDescription", "status", "assignedById", "createdAt", "assignedByName","updatedAt",
-            "createdBy", "updatedBy", "fromDate", "toDate"
+            "qualification", "salaryPackage", "noOfPositions", "visaType", "clientId",
+            "jobDescription", "status", "assignedById", "createdAt", "assignedByName",
+            "updatedAt", "createdBy", "updatedBy",
+            "billRate", "payRate", "submissions", "assignedUsers",
+            "fromDate", "toDate"
     );
 
     public static Specification<RequirementV2> createSearchSpecification(String keyword) {
@@ -138,7 +140,42 @@ public class RequirementSpecificationsV2 {
                             case "assignedById":
                             case "assignedByName":
                             case "clientId":
-                                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),"%" + value.toString().toLowerCase() + "%"));
+                            case "billRate":
+                            case "payRate":
+                            case "submissions":
+
+                                predicates.add(
+                                        criteriaBuilder.like(
+                                                criteriaBuilder.lower(root.get(field)),
+                                                "%" + value.toString().toLowerCase() + "%"
+                                        )
+                                );
+                                break;
+                            case "assignedUsers":
+
+                                var assignedUserSubquery = query.subquery(String.class);
+
+                                var jobRecruiterRoot =
+                                        assignedUserSubquery.from(JobRecruiterV2.class);
+
+                                assignedUserSubquery
+                                        .select(jobRecruiterRoot.get("requirementId"))
+                                        .where(
+                                                criteriaBuilder.like(
+                                                        criteriaBuilder.lower(
+                                                                criteriaBuilder.trim(
+                                                                        jobRecruiterRoot.get("userName")
+                                                                )
+                                                        ),
+                                                        "%" + value.toString().trim().toLowerCase() + "%"
+                                                )
+                                        );
+
+                                predicates.add(
+                                        criteriaBuilder.in(root.get("jobId"))
+                                                .value(assignedUserSubquery)
+                                );
+
                                 break;
                             case "noOfPositions":
                                 try {
