@@ -92,16 +92,10 @@ public class SubmissionSpecification {
 
                 addStringFilter(filters, "submissionId", "submissionId", root, cb, predicates);
                 addStringFilter(filters, "candidateName", "candidateName", root, cb, predicates);
-                addStringFilter(filters, "email", "candidateEmail", root, cb, predicates);
-                addStringFilter(filters, "mobile", "mobileNumber", root, cb, predicates);
+                addStringFilter(filters, "candidateEmail", "candidateEmail", root, cb, predicates);
+                addStringFilter(filters, "mobileNumber", "mobileNumber", root, cb, predicates);
                 addStringFilter(filters, "jobId", "jobId", root, cb, predicates);
-
-                if (hasValue(filters, "recruiter")) {
-                    String value = filters.get("recruiter").toString().trim().toLowerCase();
-                    String search = "%" + value + "%";
-                    predicates.add(cb.or(cb.like(cb.lower(root.get("recruiterName")), search), cb.like(cb.lower(root.get("recruiterId")), search)));
-                }
-
+                addStringFilter(filters, "recruiterName", "recruiterName", root, cb, predicates);
                 addStringFilter(filters, "visaType", "visaType", root, cb, predicates);
                 addStringFilter(filters, "billRate", "billRate", root, cb, predicates);
                 addStringFilter(filters, "payRate", "payRate", root, cb, predicates);
