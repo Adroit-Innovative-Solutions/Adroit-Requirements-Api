@@ -80,6 +80,7 @@ public class DashBoardServiceImpl {
                     (
                         SELECT COUNT(*)
                         FROM production.placements_us
+                         WHERE status = 'ACTIVE'
                     ) AS totalPlacementsOverall
                 """;
 
