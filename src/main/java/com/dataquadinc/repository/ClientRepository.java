@@ -29,4 +29,6 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     // Count number of requirements for a given client
     @Query(value = "SELECT COUNT(*) FROM requirements_us WHERE client_name = :clientName", nativeQuery = true)
     int countRequirementsByClientName(@Param("clientName") String clientName);
+
+    List<Client> findByInvoiceIgnoreCase(String invoice);
 }
