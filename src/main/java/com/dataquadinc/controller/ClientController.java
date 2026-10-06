@@ -204,4 +204,25 @@ public class ClientController {
         service.deleteClient(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Client deleted successfully", null, null));
     }
+
+    @GetMapping("/usclient/invoice/yes")
+    public ResponseEntity<ApiResponse<List<Client_Dto>>> getClientsWithInvoice() {
+
+        try {
+            List<Client_Dto> clients = service.getClientsWithInvoice();
+            return ResponseEntity.ok(new ApiResponse<>(true, "Clients with invoice details fetched successfully", clients, null));
+
+        } catch (Exception e) {
+
+            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR), "Something went wrong: " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                            false,
+                            "Unexpected Error",
+                            null,
+                            error
+                    ));
+        }
+    }
 }

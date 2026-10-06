@@ -29,6 +29,7 @@ public class Client_Dto {
     private String status;
     private String feedBack;
     private int numberOfRequirements;
+    private String invoice;
 
     public int getNumberOfRequirements() {
         return numberOfRequirements;
@@ -149,6 +150,10 @@ public class Client_Dto {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getInvoice() { return invoice; }
+
+    public void setInvoice(String invoice) { this.invoice = invoice; }
 
 
 

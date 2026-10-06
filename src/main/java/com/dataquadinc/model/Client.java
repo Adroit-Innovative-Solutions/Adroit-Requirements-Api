@@ -39,6 +39,9 @@ public class Client {
     @Column(length = 1000)
     private String clientLinkedInUrl;
 
+    @Column(name = "invoice", length = 10)
+    private String invoice;
+
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> supportingDocumentNames = new ArrayList<>();
 
@@ -211,4 +214,8 @@ public class Client {
     public void setNumberOfRequirements(int numberOfRequirements) {
         this.numberOfRequirements = numberOfRequirements;
     }
+
+    public String getInvoice() { return invoice; }
+
+    public void setInvoice(String invoice) { this.invoice = invoice; }
 }

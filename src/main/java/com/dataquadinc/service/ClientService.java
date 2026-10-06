@@ -74,6 +74,7 @@ public class ClientService {
         dto.setPositionType(client.getPositionType());
         dto.setStatus(client.getStatus());
         dto.setFeedBack(client.getFeedBack());
+        dto.setInvoice(client.getInvoice());
         List<ClientDocumentDto> documentDtos = client.getDocuments().stream()
                 .map(doc -> {
                     ClientDocumentDto d = new ClientDocumentDto();
@@ -113,6 +114,7 @@ public class ClientService {
         client.setOnBoardedByName(dto.getOnBoardedByName());
         client.setPositionType(dto.getPositionType());
         client.setFeedBack(dto.getFeedBack());
+        client.setInvoice(dto.getInvoice());
         // Map supporting documents from DTO to entity
         if (dto.getSupportingDocuments() != null && !dto.getSupportingDocuments().isEmpty()) {
             List<ClientDocument> documents = dto.getSupportingDocuments().stream().map(docDto -> {
@@ -311,6 +313,11 @@ public class ClientService {
                 existingClient.setFeedBack(dto.getFeedBack());
                 logger.debug("Updated feedback");
             }
+
+            if (dto.getInvoice() != null) {
+                existingClient.setInvoice(dto.getInvoice());
+                logger.debug("Updated invoice: {}", dto.getInvoice());
+            }
             // 🔹 Save updated entity
             Client updatedClient = repository.save(existingClient);
             logger.info("Client updated successfully: {}", updatedClient.getClientId());
@@ -363,6 +370,13 @@ public class ClientService {
         docs.stream()
                 .filter(doc -> doc.getClient().getClientId().equals(clientId))
                 .forEach(documentRepository::delete);
+    }
+
+    public List<Client_Dto> getClientsWithInvoice() {
+        List<Client> clients = repository.findByInvoiceIgnoreCase("yes");
+        return clients.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
 
