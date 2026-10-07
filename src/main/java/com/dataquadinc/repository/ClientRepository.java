@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
@@ -31,4 +32,17 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     int countRequirementsByClientName(@Param("clientName") String clientName);
 
     List<Client> findByInvoiceIgnoreCase(String invoice);
+
+    Optional<Client> findByVendorId(String vendorId);
+
+    @Query("""
+    SELECT MAX(
+        CAST(SUBSTRING(c.vendorId, 5) AS integer)
+    )
+    FROM Client c
+    WHERE c.vendorId LIKE 'VENDOR%'
+""")
+    Integer findMaxVendorNumber();
+
+
 }

@@ -27,17 +27,20 @@ public class Client {
 
     private String onBoardedById;
     private String onBoardedByName;
-    private String clientAddress;
+    @Column(name = "vendor_address")
+    private String vendorAddress;
+
     private String positionType;
     private int netPayment;
 
     @JdbcTypeCode(SqlTypes.JSON)
     private List<SupportingCustomerInfo> supportingCustomers = new ArrayList<>();
 
-    private String clientWebsiteUrl;
+    @Column(name = "vendor_website_url")
+    private String vendorWebsiteUrl;
 
-    @Column(length = 1000)
-    private String clientLinkedInUrl;
+    @Column(name = "vendor_linked_in_url")
+    private String vendorLinkedInUrl;
 
     @Column(name = "invoice", length = 10)
     private String invoice;
@@ -61,7 +64,21 @@ public class Client {
     private String feedBack;
 
     @Transient
-    private int numberOfRequirements; // Computed, not persisted
+    private int numberOfRequirements;// Computed, not persisted
+
+    @Column(name = "vendor_id", unique = true)
+    private String vendorId;
+
+    @Column(name = "vendor_name")
+    private String vendorName;
+
+//    @Column(name = "vendor_net_pay")
+//    private int vendorNetPay;
+
+    @Column(name = "net_pay")
+    private int netPay;
+
+
 
     // Auto-generate clientId if not provided
     @PrePersist
@@ -111,17 +128,21 @@ public class Client {
         this.onBoardedByName = onBoardedByName;
     }
 
-    public String getClientAddress() {
-        return clientAddress;
-    }
-
-    public void setClientAddress(String clientAddress) {
-        this.clientAddress = clientAddress;
-    }
-
     public String getPositionType() {
         return positionType;
     }
+
+    public String getVendorAddress() { return vendorAddress; }
+
+    public void setVendorAddress(String vendorAddress) { this.vendorAddress = vendorAddress; }
+
+    public String getVendorWebsiteUrl() { return vendorWebsiteUrl; }
+
+    public void setVendorWebsiteUrl(String vendorWebsiteUrl) { this.vendorWebsiteUrl = vendorWebsiteUrl; }
+
+    public String getVendorLinkedInUrl() { return vendorLinkedInUrl; }
+
+    public void setVendorLinkedInUrl(String vendorLinkedInUrl) { this.vendorLinkedInUrl = vendorLinkedInUrl; }
 
     public void setPositionType(String positionType) {
         this.positionType = positionType;
@@ -141,22 +162,6 @@ public class Client {
 
     public void setSupportingCustomers(List<SupportingCustomerInfo> supportingCustomers) {
         this.supportingCustomers = supportingCustomers;
-    }
-
-    public String getClientWebsiteUrl() {
-        return clientWebsiteUrl;
-    }
-
-    public void setClientWebsiteUrl(String clientWebsiteUrl) {
-        this.clientWebsiteUrl = clientWebsiteUrl;
-    }
-
-    public String getClientLinkedInUrl() {
-        return clientLinkedInUrl;
-    }
-
-    public void setClientLinkedInUrl(String clientLinkedInUrl) {
-        this.clientLinkedInUrl = clientLinkedInUrl;
     }
 
     public List<String> getSupportingDocumentNames() {
@@ -215,7 +220,23 @@ public class Client {
         this.numberOfRequirements = numberOfRequirements;
     }
 
+    public String getVendorId() {return vendorId;}
+
+    public void setVendorId(String vendorId) {this.vendorId = vendorId;}
+
+    public String getVendorName() {return vendorName;}
+
+    public void setVendorName(String vendorName) {this.vendorName = vendorName;}
+
+//    public int getVendorNetPay() { return vendorNetPay; }
+//
+//    public void setVendorNetPay(int vendorNetPay) { this.vendorNetPay = vendorNetPay;}
+
     public String getInvoice() { return invoice; }
 
     public void setInvoice(String invoice) { this.invoice = invoice; }
+
+    public int getNetPay() { return netPay; }
+
+    public void setNetPay(int netPay) { this.netPay = netPay; }
 }

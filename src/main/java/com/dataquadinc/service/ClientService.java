@@ -64,17 +64,20 @@ public class ClientService {
         Client_Dto dto = new Client_Dto();
         dto.setClientId(client.getClientId());
         dto.setClientName(client.getClientName());
-        dto.setClientAddress(client.getClientAddress());
+        dto.setVendorAddress(client.getVendorAddress());
         dto.setNetPayment(client.getNetPayment());
         dto.setSupportingCustomers(client.getSupportingCustomers());
-        dto.setClientWebsiteUrl(client.getClientWebsiteUrl());
-        dto.setClientLinkedInUrl(client.getClientLinkedInUrl());
+        dto.setVendorWebsiteUrl(client.getVendorWebsiteUrl());
+        dto.setVendorLinkedInUrl(client.getVendorLinkedInUrl());
         dto.setOnBoardedById(client.getOnBoardedById());
         dto.setOnBoardedByName(client.getOnBoardedByName());
         dto.setPositionType(client.getPositionType());
         dto.setStatus(client.getStatus());
         dto.setFeedBack(client.getFeedBack());
         dto.setInvoice(client.getInvoice());
+        dto.setVendorId(client.getVendorId());
+        dto.setVendorName(client.getVendorName());
+        //dto.setVendorNetPay(client.getVendorNetPay());
         List<ClientDocumentDto> documentDtos = client.getDocuments().stream()
                 .map(doc -> {
                     ClientDocumentDto d = new ClientDocumentDto();
@@ -105,16 +108,19 @@ public class ClientService {
         Client client = new Client();
         client.setClientId(dto.getClientId());
         client.setClientName(dto.getClientName());
-        client.setClientAddress(dto.getClientAddress());
+        client.setVendorAddress(dto.getVendorAddress());
         client.setNetPayment(dto.getNetPayment());
         client.setSupportingCustomers(dto.getSupportingCustomers());
-        client.setClientWebsiteUrl(dto.getClientWebsiteUrl());
-        client.setClientLinkedInUrl(dto.getClientLinkedInUrl());
+        client.setVendorWebsiteUrl(dto.getVendorWebsiteUrl());
+        client.setVendorLinkedInUrl(dto.getVendorLinkedInUrl());
         client.setOnBoardedById(dto.getOnBoardedById());
         client.setOnBoardedByName(dto.getOnBoardedByName());
         client.setPositionType(dto.getPositionType());
         client.setFeedBack(dto.getFeedBack());
         client.setInvoice(dto.getInvoice());
+        client.setVendorId(dto.getVendorId());
+        client.setVendorName(dto.getVendorName());
+        //client.setVendorNetPay(dto.getVendorNetPay());
         // Map supporting documents from DTO to entity
         if (dto.getSupportingDocuments() != null && !dto.getSupportingDocuments().isEmpty()) {
             List<ClientDocument> documents = dto.getSupportingDocuments().stream().map(docDto -> {
@@ -151,6 +157,10 @@ public class ClientService {
 
         Client entity = convertToEntity(dto);
         entity.setClientId(generateCustomId());
+        entity.setVendorId(generateVendorId());
+        entity.setVendorName(dto.getVendorName() != null && !dto.getVendorName().isBlank()
+                ? dto.getVendorName()
+                : dto.getClientName());
 
         String createdById = dto.getOnBoardedById();
         String createdByName = dto.getOnBoardedByName();
@@ -206,7 +216,14 @@ public class ClientService {
 
         return convertToDTO(saved);
     }
+    private String generateVendorId() {
 
+        Integer maxNumber = repository.findMaxVendorNumber();
+
+        int nextNumber = (maxNumber == null) ? 1 : maxNumber + 1;
+
+        return String.format("VENDOR%03d", nextNumber);
+    }
     public List<Client_Dto> getAllClients() {
         logger.info("Fetching all clients with their documents...");
         List<Client> clients = repository.findAllWithDocuments();
@@ -271,7 +288,13 @@ public class ClientService {
     public Optional<Client_Dto> updateClient(String id, Client_Dto dto) {
         logger.info("Updating client with ID: {}", id);
 
-        return repository.findById(id).map(existingClient -> {
+        Optional<Client> clientOptional = repository.findById(id);
+
+        if (clientOptional.isEmpty()) {
+            clientOptional = repository.findByVendorId(id);
+        }
+
+        return clientOptional.map(existingClient -> {
 
             // 🔹 Update onboarded info (only if provided)
             if (dto.getOnBoardedById() != null && !dto.getOnBoardedById().isBlank()) {
@@ -285,21 +308,21 @@ public class ClientService {
                 existingClient.setClientName(dto.getClientName());
                 logger.debug("Updated clientName: {}", dto.getClientName());
             }
-            if (dto.getClientAddress() != null) {
-                existingClient.setClientAddress(dto.getClientAddress());
-                logger.debug("Updated clientAddress: {}", dto.getClientAddress());
+            if (dto.getVendorAddress() != null) {
+                existingClient.setVendorAddress(dto.getVendorAddress());
+                logger.debug("Updated clientAddress: {}", dto.getVendorAddress());
             }
             if (dto.getNetPayment() > 0) {
                 existingClient.setNetPayment(dto.getNetPayment());
                 logger.debug("Updated netPayment: {}", dto.getNetPayment());
             }
-            if (dto.getClientWebsiteUrl() != null) {
-                existingClient.setClientWebsiteUrl(dto.getClientWebsiteUrl());
-                logger.debug("Updated clientWebsiteUrl: {}", dto.getClientWebsiteUrl());
+            if (dto.getVendorWebsiteUrl() != null) {
+                existingClient.setVendorWebsiteUrl(dto.getVendorWebsiteUrl());
+                logger.debug("Updated clientWebsiteUrl: {}", dto.getVendorWebsiteUrl());
             }
-            if (dto.getClientLinkedInUrl() != null) {
-                existingClient.setClientLinkedInUrl(dto.getClientLinkedInUrl());
-                logger.debug("Updated clientLinkedInUrl: {}", dto.getClientLinkedInUrl());
+            if (dto.getVendorLinkedInUrl() != null) {
+                existingClient.setVendorLinkedInUrl(dto.getVendorLinkedInUrl());
+                logger.debug("Updated clientLinkedInUrl: {}", dto.getVendorLinkedInUrl());
             }
             if (dto.getPositionType() != null) {
                 existingClient.setPositionType(dto.getPositionType());
@@ -317,6 +340,17 @@ public class ClientService {
             if (dto.getInvoice() != null) {
                 existingClient.setInvoice(dto.getInvoice());
                 logger.debug("Updated invoice: {}", dto.getInvoice());
+            }
+
+            if (dto.getVendorName() != null) {
+                existingClient.setVendorName(dto.getVendorName());
+            }
+
+//            if (dto.getVendorNetPay() != 0) {
+//                existingClient.setVendorNetPay(dto.getVendorNetPay());
+//            }
+            if (dto.getNetPayment() != 0) {
+                existingClient.setNetPayment(dto.getNetPayment());
             }
             // 🔹 Save updated entity
             Client updatedClient = repository.save(existingClient);

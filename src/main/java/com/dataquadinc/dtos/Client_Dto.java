@@ -13,16 +13,16 @@ import java.util.List;
 public class Client_Dto {
     private String clientId;
     private String clientName;
-    private String clientAddress;
+    private String vendorAddress;
     private String positionType;
     private int netPayment;
     private List<SupportingCustomerInfo> supportingCustomers;
     @Pattern(regexp = "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/.*)?$",
             message = "Invalid website URL format")
-    private String clientWebsiteUrl;
+    private String vendorWebsiteUrl;
     @Pattern(regexp = "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/.*)?$",
             message = "Invalid LinkedIn URL format")
-    private String clientLinkedInUrl;
+    private String vendorLinkedInUrl;
     private List<ClientDocumentDto> supportingDocuments =new ArrayList<>(); // Stores file names only
     private String onBoardedById;
     private String onBoardedByName;
@@ -30,6 +30,9 @@ public class Client_Dto {
     private String feedBack;
     private int numberOfRequirements;
     private String invoice;
+    private String vendorId;
+    private String vendorName;
+    private int vendorNetPay;
 
     public int getNumberOfRequirements() {
         return numberOfRequirements;
@@ -61,13 +64,17 @@ public class Client_Dto {
         this.clientName = clientName;
     }
 
-    public String getClientAddress() {
-        return clientAddress;
-    }
+    public String getVendorAddress() { return vendorAddress; }
 
-    public void setClientAddress(String clientAddress) {
-        this.clientAddress = clientAddress;
-    }
+    public void setVendorAddress(String vendorAddress) { this.vendorAddress = vendorAddress; }
+
+    public String getVendorWebsiteUrl() { return vendorWebsiteUrl; }
+
+    public void setVendorWebsiteUrl(String vendorWebsiteUrl) { this.vendorWebsiteUrl = vendorWebsiteUrl; }
+
+    public String getVendorLinkedInUrl() { return vendorLinkedInUrl; }
+
+    public void setVendorLinkedInUrl(String vendorLinkedInUrl) { this.vendorLinkedInUrl = vendorLinkedInUrl; }
 
     public String getPositionType() {
         return positionType;
@@ -92,22 +99,6 @@ public class Client_Dto {
 
     public void setSupportingCustomers(List<SupportingCustomerInfo> supportingCustomers) {
         this.supportingCustomers = supportingCustomers;
-    }
-
-    public String getClientWebsiteUrl() {
-        return clientWebsiteUrl;
-    }
-
-    public void setClientWebsiteUrl(String clientWebsiteUrl) {
-        this.clientWebsiteUrl = clientWebsiteUrl;
-    }
-
-    public String getClientLinkedInUrl() {
-        return clientLinkedInUrl;
-    }
-
-    public void setClientLinkedInUrl(String clientLinkedInUrl) {
-        this.clientLinkedInUrl = clientLinkedInUrl;
     }
 
     public String getClientId() {
@@ -152,6 +143,22 @@ public class Client_Dto {
     }
 
     public String getInvoice() { return invoice; }
+
+    public List<ClientDocumentDto> getSupportingDocuments() { return supportingDocuments;}
+
+    public void setSupportingDocuments(List<ClientDocumentDto> supportingDocuments) { this.supportingDocuments = supportingDocuments;}
+
+    public String getVendorId() { return vendorId; }
+
+    public void setVendorId(String vendorId) { this.vendorId = vendorId; }
+
+    public String getVendorName() { return vendorName; }
+
+    public void setVendorName(String vendorName) { this.vendorName = vendorName; }
+
+    public int getVendorNetPay() { return vendorNetPay; }
+
+    public void setVendorNetPay(int vendorNetPay) { this.vendorNetPay = vendorNetPay; }
 
     public void setInvoice(String invoice) { this.invoice = invoice; }
 
