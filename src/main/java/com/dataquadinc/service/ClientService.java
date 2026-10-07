@@ -77,6 +77,7 @@ public class ClientService {
         dto.setInvoice(client.getInvoice());
         dto.setVendorId(client.getVendorId());
         dto.setVendorName(client.getVendorName());
+        dto.setCurrency(client.getCurrency());
         //dto.setVendorNetPay(client.getVendorNetPay());
         List<ClientDocumentDto> documentDtos = client.getDocuments().stream()
                 .map(doc -> {
@@ -120,6 +121,7 @@ public class ClientService {
         client.setInvoice(dto.getInvoice());
         client.setVendorId(dto.getVendorId());
         client.setVendorName(dto.getVendorName());
+        client.setCurrency(dto.getCurrency());
         //client.setVendorNetPay(dto.getVendorNetPay());
         // Map supporting documents from DTO to entity
         if (dto.getSupportingDocuments() != null && !dto.getSupportingDocuments().isEmpty()) {
@@ -352,6 +354,11 @@ public class ClientService {
             if (dto.getNetPayment() != 0) {
                 existingClient.setNetPayment(dto.getNetPayment());
             }
+
+            if (dto.getCurrency() != null) {
+                existingClient.setCurrency(dto.getCurrency());
+                logger.debug("Updated currency: {}", dto.getCurrency());
+            }
             // 🔹 Save updated entity
             Client updatedClient = repository.save(existingClient);
             logger.info("Client updated successfully: {}", updatedClient.getClientId());
@@ -362,10 +369,12 @@ public class ClientService {
     }
 
 
-    public void deleteClient(String id) {
-        logger.info("Deleting client with ID: {}", id);
-        repository.deleteById(id);
-        logger.info("Client deleted: {}", id);
+    public void deleteClient(String vendorId) {
+        logger.info("Deleting client with Vendor ID: {}", vendorId);
+        Client client = repository.findByVendorId(vendorId)
+                .orElseThrow(() -> new RuntimeException("No client found with Vendor ID: " + vendorId));
+        repository.delete(client);
+        logger.info("Client deleted successfully with Vendor ID: {}", vendorId);
     }
 
     // Handle multiple document updates or additions for a client
@@ -411,6 +420,68 @@ public class ClientService {
         return clients.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<VendorClientsDto> getInvoiceVendorsWithClients() {
+
+        // Get ONLY invoice = Yes records
+        List<Client> clients = repository.findByInvoiceIgnoreCase("yes");
+
+        Map<String, VendorClientsDto> vendorMap = new LinkedHashMap<>();
+
+        for (Client client : clients) {
+
+            String vendorId = client.getVendorId();
+            String vendorName = client.getVendorName();
+
+            // Skip records without vendor ID
+            if (vendorId == null || vendorId.trim().isEmpty()) {
+                continue;
+            }
+
+            // Create vendor only once
+            VendorClientsDto vendor = vendorMap.computeIfAbsent(vendorId, key -> {
+
+                VendorClientsDto dto = new VendorClientsDto();
+
+                dto.setVendorId(vendorId);
+                dto.setVendorName(vendorName);
+                dto.setClients(new ArrayList<>());
+
+                return dto;
+            });
+
+            // Add main client name
+            if (client.getClientName() != null
+                    && !client.getClientName().trim().isEmpty()) {
+
+                if (!vendor.getClients().contains(client.getClientName())) {
+
+                    vendor.getClients().add(client.getClientName());
+                }
+            }
+
+            // Add supporting customer client names
+            if (client.getSupportingCustomers() != null) {
+
+                for (SupportingCustomerInfo supportingCustomer
+                        : client.getSupportingCustomers()) {
+
+                    if (supportingCustomer.getClientName() != null
+                            && !supportingCustomer.getClientName().trim().isEmpty()) {
+
+                        if (!vendor.getClients()
+                                .contains(supportingCustomer.getClientName())) {
+
+                            vendor.getClients()
+                                    .add(supportingCustomer.getClientName());
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(vendorMap.values());
     }
 
 

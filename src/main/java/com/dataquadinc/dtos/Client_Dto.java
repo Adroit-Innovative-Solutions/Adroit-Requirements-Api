@@ -33,6 +33,7 @@ public class Client_Dto {
     private String vendorId;
     private String vendorName;
     private int vendorNetPay;
+    private String currency;
 
     public int getNumberOfRequirements() {
         return numberOfRequirements;
@@ -157,6 +158,10 @@ public class Client_Dto {
     public void setVendorName(String vendorName) { this.vendorName = vendorName; }
 
     public int getVendorNetPay() { return vendorNetPay; }
+
+    public String getCurrency() { return currency; }
+
+    public void setCurrency(String currency) { this.currency = currency; }
 
     public void setVendorNetPay(int vendorNetPay) { this.vendorNetPay = vendorNetPay; }
 

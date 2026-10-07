@@ -78,7 +78,8 @@ public class Client {
     @Column(name = "net_pay")
     private int netPay;
 
-
+    @Column(name = "currency")
+    private String currency;
 
     // Auto-generate clientId if not provided
     @PrePersist
@@ -239,4 +240,8 @@ public class Client {
     public int getNetPay() { return netPay; }
 
     public void setNetPay(int netPay) { this.netPay = netPay; }
+
+    public String getCurrency() { return currency; }
+
+    public void setCurrency(String currency) { this.currency = currency; }
 }
