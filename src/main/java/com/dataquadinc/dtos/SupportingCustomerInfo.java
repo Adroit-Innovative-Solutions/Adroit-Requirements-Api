@@ -3,6 +3,6 @@ import lombok.Data;
 
 @Data
 public class SupportingCustomerInfo {
-    private String customerName;
-    private int netPayment;
+    private String clientName;
+    private int netPay;
 }
