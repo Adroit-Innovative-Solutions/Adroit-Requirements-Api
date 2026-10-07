@@ -37,7 +37,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     @Query("""
     SELECT MAX(
-        CAST(SUBSTRING(c.vendorId, 5) AS integer)
+        CAST(SUBSTRING(c.vendorId, 7) AS integer)
     )
     FROM Client c
     WHERE c.vendorId LIKE 'VENDOR%'

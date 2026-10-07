@@ -1,4 +1,8 @@
 package com.dataquadinc.controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 import com.dataquadinc.commons.SystemConstants;
 import com.dataquadinc.dtos.*;
@@ -223,6 +227,20 @@ public class ClientController {
                             null,
                             error
                     ));
+        }
+    }
+
+    @GetMapping("/client/invoice/yes/vendors")
+    public ResponseEntity<ApiResponse<List<VendorClientsDto>>> getInvoiceVendorsWithClients() {
+
+        try {
+            List<VendorClientsDto> vendors = service.getInvoiceVendorsWithClients();
+            return ResponseEntity.ok(new ApiResponse<>(true, "Invoice vendors with clients fetched successfully", vendors, null));
+
+        } catch (Exception e) {
+            ErrorDto error = new ErrorDto(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR), "Something went wrong: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Unexpected Error", null, error));
         }
     }
 }
