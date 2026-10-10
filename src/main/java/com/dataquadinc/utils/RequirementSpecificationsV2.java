@@ -3,6 +3,7 @@ package com.dataquadinc.utils;
 import com.dataquadinc.model.JobRecruiterV2;
 import com.dataquadinc.model.Requirement;
 import com.dataquadinc.model.RequirementV2;
+import com.dataquadinc.tenant.TenantContext;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -207,6 +208,7 @@ public class RequirementSpecificationsV2 {
 
     public static Specification<RequirementV2> allRequirements(String keyword,Map<String,Object> filters){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
     }
@@ -214,6 +216,7 @@ public class RequirementSpecificationsV2 {
             String userId,String keyword,Map<String,Object> filters
     ){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) ->
                     criteriaBuilder.equal(root.get("assignedById"),userId)
                 ))
@@ -225,6 +228,7 @@ public class RequirementSpecificationsV2 {
             String userId,String keyword,Map<String,Object> filters
     ){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) ->{
                     // Use subquery to find requirements assigned to user
                     var subquery = query.subquery(String.class);
@@ -246,6 +250,7 @@ public class RequirementSpecificationsV2 {
             String userId, String keyword, Map<String, Object> filters
     ) {
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) -> {
                     // Check if userId is present in teamsLeadIds JSON field OR assignedById
                     Predicate inTeamLeadIds = criteriaBuilder.like(root.get("teamsLeadIds"), "%" + userId + "%");
@@ -259,6 +264,11 @@ public class RequirementSpecificationsV2 {
     public static Specification<RequirementV2> isNotDeleted() {
         return((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));
+    }
+
+    public static Specification<RequirementV2> forCurrentTenant() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("tenantId"), TenantContext.getTenantId());
     }
 
 }

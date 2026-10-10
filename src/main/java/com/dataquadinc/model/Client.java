@@ -25,6 +25,9 @@ public class Client {
     @Column(unique = true, nullable = false)
     private String clientName;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     private String onBoardedById;
     private String onBoardedByName;
     private String clientAddress;

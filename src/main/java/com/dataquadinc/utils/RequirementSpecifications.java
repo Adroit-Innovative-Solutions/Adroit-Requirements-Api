@@ -1,6 +1,7 @@
 package com.dataquadinc.utils;
 
 import com.dataquadinc.model.Requirement;
+import com.dataquadinc.tenant.TenantContext;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
@@ -113,6 +114,7 @@ public class RequirementSpecifications {
 
     public static Specification<Requirement> allRequirements(String keyword,Map<String,Object> filters){
         return Specification.<Requirement>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
     }
@@ -120,6 +122,7 @@ public class RequirementSpecifications {
             String userId,String keyword,Map<String,Object> filters
     ){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) ->
                     criteriaBuilder.equal(root.get("assignedById"),userId)
                 ))
@@ -131,6 +134,7 @@ public class RequirementSpecifications {
             String userId,String keyword,Map<String,Object> filters
     ){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) ->{
                      // JOIN Requirement and JobRecruiters
                     Join<Object,Object> jrJoin=root.join("jobRecruiters", JoinType.INNER);
@@ -143,6 +147,11 @@ public class RequirementSpecifications {
     public static Specification<Requirement> isNotDeleted() {
         return((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));
+    }
+
+    public static Specification<Requirement> forCurrentTenant() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("tenantId"), TenantContext.getTenantId());
     }
 
 }

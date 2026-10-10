@@ -1,6 +1,7 @@
 package com.dataquadinc.utils;
 
 import com.dataquadinc.model.Submissions;
+import com.dataquadinc.tenant.TenantContext;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -20,6 +21,8 @@ public class SubmissionSpecification {
         return (root, query, cb) -> {
 
             List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.equal(root.get("tenantId"), TenantContext.getTenantId()));
 
             if (keyword != null && !keyword.trim().isEmpty()) {
 

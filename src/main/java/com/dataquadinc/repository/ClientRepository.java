@@ -18,15 +18,15 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     List<String> findByClientName(@Param("clientName") String clientName);
 
     // Fetch all clients
-    @Query("SELECT b FROM Client b")
-    List<Client> getClients();
+    @Query("SELECT b FROM Client b WHERE b.tenantId = :tenantId")
+    List<Client> getClients(@Param("tenantId") String tenantId);
 
     // Fetch all clients along with their documents (EntityGraph ensures documents are eagerly loaded)
     @EntityGraph(attributePaths = {"documents"})
-    @Query("SELECT c FROM Client c")
-    List<Client> findAllWithDocuments();
+    @Query("SELECT c FROM Client c WHERE c.tenantId = :tenantId")
+    List<Client> findAllWithDocuments(@Param("tenantId") String tenantId);
 
     // Count number of requirements for a given client
-    @Query(value = "SELECT COUNT(*) FROM requirements_us WHERE client_name = :clientName", nativeQuery = true)
-    int countRequirementsByClientName(@Param("clientName") String clientName);
+    @Query(value = "SELECT COUNT(*) FROM requirements_us WHERE client_name = :clientName AND tenant_id = :tenantId", nativeQuery = true)
+    int countRequirementsByClientName(@Param("clientName") String clientName, @Param("tenantId") String tenantId);
 }

@@ -7,6 +7,8 @@ import com.dataquadinc.model.ClientDocument;
 import com.dataquadinc.repository.ClientDocumentRepository;
 import com.dataquadinc.repository.ClientRepository;
 import com.dataquadinc.repository.RequirementRepository;
+import com.dataquadinc.tenant.TenantAccess;
+import com.dataquadinc.tenant.TenantContext;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,6 +151,7 @@ public class ClientService {
 
         Client entity = convertToEntity(dto);
         entity.setClientId(generateCustomId());
+        entity.setTenantId(TenantContext.getTenantId());
 
         String createdById = dto.getOnBoardedById();
         String createdByName = dto.getOnBoardedByName();
@@ -207,12 +210,13 @@ public class ClientService {
 
     public List<Client_Dto> getAllClients() {
         logger.info("Fetching all clients with their documents...");
-        List<Client> clients = repository.findAllWithDocuments();
+        List<Client> clients = repository.findAllWithDocuments(TenantContext.getTenantId());
 
         return clients.stream()
                 .map(client -> {
                     Client_Dto dto = convertToDTO(client);
-                    int requirementCount = repository.countRequirementsByClientName(client.getClientName());
+                    int requirementCount = repository.countRequirementsByClientName(
+                            client.getClientName(), TenantContext.getTenantId());
                     dto.setNumberOfRequirements(requirementCount);
                     return dto;
                 })
@@ -222,7 +226,7 @@ public class ClientService {
 
     public List<ClientsDetailsDto> getAllClientsNames() {
         logger.info("Fetching all clients for the current month...");
-        List<Client> clients = repository.getClients();
+        List<Client> clients = repository.getClients(TenantContext.getTenantId());
         logger.info("Fetched {} clients for current month", clients.size());
 
         return clients.stream()
@@ -257,7 +261,8 @@ public class ClientService {
 
     public Optional<Client_Dto> getClientById(String id) {
         logger.info("Fetching client by ID: {}", id);
-        Optional<Client> clientOpt = repository.findById(id);
+        Optional<Client> clientOpt = repository.findById(id)
+                .filter(c -> !TenantAccess.isForeignTenant(c.getTenantId()));
         if (clientOpt.isPresent()) {
             logger.info("Client found with ID: {}", id);
         } else {
@@ -269,7 +274,9 @@ public class ClientService {
     public Optional<Client_Dto> updateClient(String id, Client_Dto dto) {
         logger.info("Updating client with ID: {}", id);
 
-        return repository.findById(id).map(existingClient -> {
+        return repository.findById(id)
+                .filter(c -> !TenantAccess.isForeignTenant(c.getTenantId()))
+                .map(existingClient -> {
 
             // 🔹 Update onboarded info (only if provided)
             if (dto.getOnBoardedById() != null && !dto.getOnBoardedById().isBlank()) {
@@ -323,6 +330,11 @@ public class ClientService {
 
     public void deleteClient(String id) {
         logger.info("Deleting client with ID: {}", id);
+        Client client = repository.findById(id).orElse(null);
+        if (client == null || TenantAccess.isForeignTenant(client.getTenantId())) {
+            logger.warn("No client found with ID: {}", id);
+            return;
+        }
         repository.deleteById(id);
         logger.info("Client deleted: {}", id);
     }

@@ -12,6 +12,7 @@ import com.dataquadinc.repository.JobRecruiterRepository;
 import com.dataquadinc.repository.RequirementRepository;
 import com.dataquadinc.service.JobRecruiterService;
 import com.dataquadinc.service.RequirementService;
+import com.dataquadinc.tenant.TenantAccess;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -94,6 +95,9 @@ public class RequirementServiceImpl implements RequirementService {
 
       Requirement requirement=requirementRepository.findById(jobId)
                .orElseThrow(()-> new ResourceNotFoundException("No Requirement Found With Job ID "+jobId));
+      if (TenantAccess.isForeignTenant(requirement.getTenantId())) {
+          throw new ResourceNotFoundException("No Requirement Found With Job ID "+jobId);
+      }
 
        RequirementDTO requirementDTO=requirementMapper.toDto(requirement);
         requirementDTO.setAssignedUsers(getUserAssignments(jobId));
@@ -105,6 +109,9 @@ public class RequirementServiceImpl implements RequirementService {
 
         Requirement requirement=requirementRepository.findById(jobId).
                 orElseThrow(()-> new ResourceNotFoundException("No Resource Found With ID "+jobId));
+        if (TenantAccess.isForeignTenant(requirement.getTenantId())) {
+            throw new ResourceNotFoundException("No Resource Found With ID "+jobId);
+        }
         if(requirement.getJobDescriptionBlob()==null){
             throw new ResourceNotFoundException("No JD file found for Job Id "+jobId);
         }
@@ -127,6 +134,9 @@ public class RequirementServiceImpl implements RequirementService {
 
         Requirement requirement=requirementRepository.findById(jobId)
                 .orElseThrow(()-> new ResourceNotFoundException("No Requirement Found With ID "+jobId));
+        if (TenantAccess.isForeignTenant(requirement.getTenantId())) {
+            throw new ResourceNotFoundException("No Requirement Found With ID "+jobId);
+        }
 
         Set<JobRecruiter> jobRecruiters=requirement.getJobRecruiters();
         jobRecruiters.stream()

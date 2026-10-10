@@ -12,6 +12,7 @@ import com.dataquadinc.repository.JobRecruiterRepositoryV2;
 import com.dataquadinc.repository.RequirementRepositoryV2;
 import com.dataquadinc.repository.SubmissionsRepository;
 import com.dataquadinc.service.RequirementServiceV2;
+import com.dataquadinc.tenant.TenantAccess;
 import com.dataquadinc.utils.RequirementSpecificationsV2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -211,6 +212,9 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
         ApiResponse apiResponse = new ApiResponse();
         RequirementV2 requirement = requirementRepositoryV2.findById(jobId)
                 .orElseThrow(() -> new GlobalException("No Requirement Found With ID " + jobId));
+        if (TenantAccess.isForeignTenant(requirement.getTenantId())) {
+            throw new GlobalException("No Requirement Found With ID " + jobId);
+        }
 
         RequirementResDTOV2 requirementResDTOV2 = new RequirementResDTOV2();
         requirementResDTOV2.setJobId(requirement.getJobId());
@@ -357,7 +361,7 @@ public class RequirementServiceImplV2 implements RequirementServiceV2 {
     public ApiResponse delete(String jobId){
         Optional<RequirementV2> requirement = requirementRepositoryV2.findById(jobId);
 
-        if(requirement.isEmpty()){
+        if(requirement.isEmpty() || TenantAccess.isForeignTenant(requirement.get().getTenantId())){
             return new ApiResponse(false, "Requirement not found", null,null);
         }
         requirementRepositoryV2.deleteById(jobId);
