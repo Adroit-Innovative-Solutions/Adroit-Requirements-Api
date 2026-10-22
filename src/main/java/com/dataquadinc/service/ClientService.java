@@ -343,6 +343,11 @@ public class ClientService {
                 existingClient.setInvoice(dto.getInvoice());
                 logger.debug("Updated invoice: {}", dto.getInvoice());
             }
+            // Update status only if the request contains a value
+            if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+                existingClient.setStatus(dto.getStatus());
+                logger.debug("Updated status: {}", dto.getStatus());
+            }
 
             if (dto.getVendorName() != null) {
                 existingClient.setVendorName(dto.getVendorName());
