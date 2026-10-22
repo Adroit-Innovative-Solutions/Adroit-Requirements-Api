@@ -81,7 +81,7 @@ public class ClientController {
 
     @GetMapping("/client/getAll")
     public ResponseEntity<ApiResponse<List<Client_Dto>>> getAllClients() {
-        service.evaluateClientStatuses();
+       // service.evaluateClientStatuses();
         List<Client_Dto> clients = service.getAllClients();
         return ResponseEntity.ok(new ApiResponse<>(true, "Clients fetched successfully", clients, null));
     }
